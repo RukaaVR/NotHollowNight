@@ -346,6 +346,7 @@ export abstract class Boss extends Entity implements BossLike {
     }
     const first = !w.progress.bosses[this.id];
     w.progress.bosses[this.id] = Math.max(1, Math.round(w.progress.playTime));
+    w.progress.flags[`boss_${this.id}`] = 1;
     events.emit('bossDefeated', { id: this.id });
     if (first) {
       this.rewards.forEach((r, i) => {

@@ -1,6 +1,5 @@
 import { TAU } from '../core/math';
 import { fxRng } from '../core/rng';
-import { sfx } from '../core/events';
 import { PK } from '../vfx/Particles';
 import { T, TILE } from '../world/tiles';
 import { newHitId, playerStrike } from './combat';

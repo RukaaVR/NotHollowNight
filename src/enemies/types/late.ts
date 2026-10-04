@@ -407,7 +407,7 @@ export const lurker: EnemyDef = {
   hp: 18, dmg: 1, w: 16, h: 12, frags: 7, sight: 120, weight: 0.9, stagger: 4, color: '#60b0b8', pitch: 0.6,
   role: 'Waits beneath still water and leaps at anything on the shore.', weakness: 'Out of the water it is clumsy. Punish it before it slides back.',
   lore: 'It has not moved in so long that the water forgot it was there. Then you arrived.',
-  think(e, dt) {
+  think(e, _dt) {
     const b = e.body;
     const wet = e.world.grid.liquidAt(e.cx, e.cy) === T.Water;
     if (e.state === 'idle' || e.state === 'hidden' || e.state === 'patrol') {

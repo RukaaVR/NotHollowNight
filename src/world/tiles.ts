@@ -1,7 +1,7 @@
 export const TILE = 16;
 
 /** Runtime tile ids. */
-export const enum T {
+export enum T {
   Empty = 0,
   Solid = 1,
   OneWay = 2,

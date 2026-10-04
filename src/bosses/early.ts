@@ -351,7 +351,6 @@ export class WeepingRoot extends Boss {
   }
 
   protected drawBoss(ctx: CanvasRenderingContext2D): void {
-    const w = this.world;
     const cx = this.cx;
     const fy = this.y;
     // Trunk and great roots rising out of the floor

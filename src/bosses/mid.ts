@@ -249,7 +249,7 @@ export class AshWarden extends Boss {
     super(world, fx, fy, 28, 46);
     this.setup(260);
     this.staggerMax = 18;
-    this.rewards = [{ kind: 'ability', value: 'drop' }, { kind: 'key', value: 'foundry_key' }];
+    this.rewards = [{ kind: 'ability', value: 'drop' }];
   }
 
   protected chooseMove(): string {

@@ -669,7 +669,7 @@ export class Player {
     return true;
   }
 
-  private updateGrapple(dt: number): void {
+  private updateGrapple(_dt: number): void {
     const b = this.body;
     const t = this.grappleTarget;
     if (!t) {

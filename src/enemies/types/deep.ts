@@ -218,7 +218,7 @@ export const arcNode: EnemyDef = {
   init(e) {
     e.vars.phase = (e.home.x * 0.013) % 3;
   },
-  think(e, dt) {
+  think(e, _dt) {
     e.body.vx = 0;
     // Find partner once (nearest node on a similar row)
     if (e.vars.partnerSearched === undefined) {

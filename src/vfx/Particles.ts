@@ -1,7 +1,7 @@
 import { TAU } from '../core/math';
 import { fxRng } from '../core/rng';
 
-export const enum PK {
+export enum PK {
   Spark = 0,
   Dust = 1,
   Smoke = 2,
