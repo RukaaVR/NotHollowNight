@@ -48,7 +48,7 @@ export class ReachMap {
 
   hazard(x: number, y: number): boolean {
     const c = this.ch(x, y);
-    if (c === 'T') return !this.ab.step;
+    if (c === 'T') return true;
     return c === '^' || c === 'v' || c === '<' || c === '>' || c === 'a';
   }
 
@@ -62,6 +62,19 @@ export class ReachMap {
   }
 
   /** A cell the player can stand in (feet at bottom of the cell). */
+  /** Shadow Step blinks ~4.5 tiles horizontally, ignoring thorns along the way. */
+  private stepThrough(ax: number, ay: number, bx: number, by: number): boolean {
+    if (!this.ab.step || ay !== by || Math.abs(bx - ax) > 5) return false;
+    const d = Math.sign(bx - ax);
+    for (let x = ax + d; x !== bx; x += d) {
+      for (const y of [ay, ay - 1]) {
+        const c = this.ch(x, y);
+        if (c !== 'T' && !this.air(x, y)) return false;
+      }
+    }
+    return true;
+  }
+
   standable(x: number, y: number): boolean {
     if (!this.air(x, y) || !this.air(x, y - 1)) return false;
     if (this.water(x, y)) return !!this.ab.dive;
@@ -103,7 +116,7 @@ export class ReachMap {
     if (inWater) return Math.abs(up) <= 2 && dx <= 2 && this.pathClear(ax, ay, bx, by);
     let maxDx: number;
     if (up > 0) {
-      const wallNear = ab.grip && (this.wallColumn(ax - 1, ay, by) || this.wallColumn(ax + 1, ay, by) || this.wallColumn(bx - 1, ay, by) || this.wallColumn(bx + 1, ay, by));
+      const wallNear = ab.grip && (this.chimney(ax, ay, by) || this.chimney(bx, ay, by));
       if (up > 4 && !wallNear) return false;
       if (wallNear && up > 4) maxDx = 3;
       else maxDx = up >= 4 ? 2 : up === 3 ? 4 : 5;
@@ -113,8 +126,22 @@ export class ReachMap {
       if (ab.glide) maxDx = 5 + Math.floor(down * 2.5) + 6;
     }
     if (ab.dash) maxDx += 4;
+    if (this.stepThrough(ax, ay, bx, by)) return true;
     if (dx > maxDx) return false;
     return this.pathClear(ax, ay, bx, by);
+  }
+
+  /** Two facing walls within wall-jump range around column x (single walls can't be scaled far). */
+  chimney(x: number, y0: number, y1: number): boolean {
+    for (let l = x - 1; l >= x - 5; l--) {
+      if (!this.wallColumn(l, y0, y1)) continue;
+      for (let r = x + 1; r <= l + 6; r++) if (this.wallColumn(r, y0, y1)) return true;
+    }
+    return false;
+  }
+
+  wallRun(x: number, y0: number, y1: number): boolean {
+    return this.wallColumn(x, y0, y1);
   }
 
   /** True if there is a continuous wall on column x between rows y0..y1. */
@@ -123,7 +150,7 @@ export class ReachMap {
     const b = Math.max(y0, y1);
     let solid = 0;
     for (let y = a; y <= b; y++) if (this.solid(x, y)) solid++;
-    return solid >= (b - a + 1) * 0.7;
+    return solid >= (b - a + 1) * 0.6;
   }
 
   nodes(): ReachNode[] {
@@ -138,6 +165,8 @@ export class ReachMap {
     const key = (n: ReachNode) => n.y * this.w + n.x;
     const seen = new Set<number>();
     const queue: ReachNode[] = [];
+    const reachedAnchors = new Set<number>();
+    const anchorQueue: number[] = [];
     for (const s of starts) {
       if (s.x < 0 || s.x >= this.w) continue;
       // A start may be an air cell: let it fall to the first standable cell.
@@ -153,6 +182,16 @@ export class ReachMap {
       if (this.standable(s.x, s.y) && !seen.has(key(s))) {
         seen.add(key(s));
         queue.push(s);
+      } else if (!this.standable(s.x, s.y) && this.air(s.x, s.y)) {
+        // Airborne start (dropping in from above): allow steering while falling.
+        for (const m of all) {
+          const k = key(m);
+          if (seen.has(k) || m.y < s.y) continue;
+          if (this.canMove(s.x, s.y, m.x, m.y)) {
+            seen.add(k);
+            queue.push(m);
+          }
+        }
       }
     }
     while (queue.length) {
@@ -167,9 +206,26 @@ export class ReachMap {
         }
       }
       if (this.ab.grapple) {
-        for (const a of anchors) {
+        for (let ai = 0; ai < anchors.length; ai++) {
+          const a = anchors[ai];
+          if (reachedAnchors.has(ai)) continue;
           if (Math.hypot(a.x - n.x, a.y - n.y) > 9.5) continue;
           if (!this.lineClear(n.x, n.y - 1, a.x, a.y)) continue;
+          reachedAnchors.add(ai);
+          anchorQueue.push(ai);
+        }
+        while (anchorQueue.length) {
+          const ai = anchorQueue.shift()!;
+          const a = anchors[ai];
+          // Chain to further anchors while airborne.
+          for (let bi = 0; bi < anchors.length; bi++) {
+            if (reachedAnchors.has(bi)) continue;
+            const o = anchors[bi];
+            if (Math.hypot(o.x - a.x, o.y - a.y) <= 9.5 && this.lineClear(a.x, a.y, o.x, o.y)) {
+              reachedAnchors.add(bi);
+              anchorQueue.push(bi);
+            }
+          }
           // From an anchor we are flung upward ~3 tiles; anything reachable from there by falling counts.
           for (const m of all) {
             const k = key(m);
@@ -182,8 +238,11 @@ export class ReachMap {
         }
       }
     }
+    this.lastAnchors = reachedAnchors;
     return seen;
   }
+
+  lastAnchors = new Set<number>();
 }
 
 export interface DoorPoint {
@@ -265,6 +324,7 @@ export function doorReachability(room: RoomDef, ab: ReachAbilities): { from: str
       let ok = false;
       if (b.name.startsWith('B')) {
         const xs = new Set(b.targets.map((t) => t.x));
+        if (a.name.startsWith('T')) for (const e of a.entries) if (xs.has(e.x) && rm.lineClear(e.x, e.y, e.x, rm.h - 1)) ok = true;
         for (const k of reach) {
           const x = k % rm.w;
           const y = Math.floor(k / rm.w);
@@ -284,9 +344,21 @@ export function doorReachability(room: RoomDef, ab: ReachAbilities): { from: str
               break;
             }
           }
+          if (!ok && ab.grip) {
+            for (const k of reach) {
+              const x = k % rm.w;
+              const y = Math.floor(k / rm.w);
+              if (Math.abs(x - t.x) <= 2 && rm.lineClear(x, y - 1, x, 1) && rm.chimney(x, 1, y)) {
+                ok = true;
+                break;
+              }
+            }
+          }
           if (ok) break;
           if (ab.grapple) {
-            for (const an of anchors) if (Math.abs(an.x - t.x) <= 3 && an.y <= 6 && [...reach].length) ok = ok || true;
+            anchors.forEach((an, i) => {
+              if (rm.lastAnchors.has(i) && Math.abs(an.x - t.x) <= 4 && an.y <= 6) ok = true;
+            });
           }
         }
       } else {

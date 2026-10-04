@@ -119,6 +119,7 @@ export const GROVE: Designs = {
       b.npc(21, 15, 'ysolde');
       b.prop(25, 15, 'flowers');
       b.plat(10, 10, 10);
+      b.pickup(14, 9, 'relic', 'p_rel_seers', 'seers_lens');
       b.put(15, 5, 'L');
       b.put(4, 8, 'c');
     },

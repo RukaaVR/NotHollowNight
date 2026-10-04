@@ -3,10 +3,13 @@ import { buildRooms, type RoomDesign, type RoomOpts } from './builder';
 import { LAYOUT, LINKS } from './layout';
 import { THRESHOLD } from './threshold';
 import { GROVE } from './grove';
+import { WARRENS } from './warrens';
+import { DROWNED } from './drowned';
+import { DEPTHS } from './depths';
 
 export type Designs = Record<string, { design: RoomDesign; opts?: RoomOpts }>;
 
-export const DESIGNS: Designs = { ...THRESHOLD, ...GROVE };
+export const DESIGNS: Designs = { ...THRESHOLD, ...GROVE, ...WARRENS, ...DROWNED, ...DEPTHS };
 
 let cache: RoomDef[] | null = null;
 

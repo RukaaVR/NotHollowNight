@@ -160,11 +160,10 @@ export const THRESHOLD: Designs = {
       // The Starwell climb: anchors high in the dark, out of reach without the Grapple.
       b.put(14, 9, 'G');
       b.put(18, 4, 'G');
-      b.ledge(10, 6, 3, 1);
-      b.ledge(20, 7, 3, 1);
+
       b.prop(16, 14, 'telescope', 'A broken telescope pointing straight up the shaft. Someone scratched "STILL THERE" on the barrel.');
       b.put(24, 7, 'L');
-      b.pickup(11, 5, 'vessel', 'p_vessel_lw');
+      b.pickup(18, 2, 'vessel', 'p_vessel_lw');
     },
   },
   lw_lower: {
