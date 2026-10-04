@@ -67,9 +67,10 @@ export abstract class Boss extends Entity implements BossLike {
 
   protected setup(hp: number): void {
     const ng = this.world.progress.ngPlus > 0 ? 1.5 : 1;
-    this.maxHp = Math.round(hp * ng);
-    this.hp = this.maxHp;
     this.challenge = this.world.challengeBoss === this.id;
+    const asc = this.challenge && this.world.challengeMod === 1 ? 1.5 : 1;
+    this.maxHp = Math.round(hp * ng * asc);
+    this.hp = this.maxHp;
   }
 
   get p() {

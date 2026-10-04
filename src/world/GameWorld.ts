@@ -110,6 +110,8 @@ export class GameWorld {
 
   // Debug
   godMode = false;
+  /** Boss rematch modifier: 0 normal, 1 Ascended (×1.5 HP, ×2 damage), 2 One Breath. */
+  challengeMod = 0;
   infiniteAether = false;
   debugDamageMult = 1;
   debugSpeed = 1;

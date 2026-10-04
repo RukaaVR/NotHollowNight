@@ -218,7 +218,7 @@ export const ottoline: NpcDef = {
         w.camera.shake(0.4, 1);
         return { lines: [L(O, 'Three hearts, three beats. Stand clear!'), L('', 'Somewhere above, a great chain groans and begins to move.'), L(O, 'She\'s running! Take these gauntlets — Warden issue, I found them in a locker. They hit like a closing door.')] };
       }
-      return { lines: [L(O, `That\'s ${p.flags.cogs_given} of three. Ticking nicely.`)] };
+      return { lines: [L(O, `That's ${p.flags.cogs_given} of three. Ticking nicely.`)] };
     }
     return { lines: [L(O, n.talks % 2 ? 'Cog Hearts tick. Follow the ticking.' : `${p.flags.cogs_given ?? 0} of three Cog Hearts. The lift is patient. I am not.`)] };
   },
@@ -311,7 +311,7 @@ export const leaflet: NpcDef = {
       }
     }
     if (given > 0) lines.push(L(B, `${count} memories! Marked, catalogued, cherished. Take this — a reader should be rewarded.`));
-    else lines.push(L(B, `${count} memories so far. ${LEAF_REWARDS[claimed] ? `Bring me ${LEAF_REWARDS[claimed].n} and I\'ll have something for you.` : 'You have found them all. Every one.'}`));
+    else lines.push(L(B, `${count} memories so far. ${LEAF_REWARDS[claimed] ? `Bring me ${LEAF_REWARDS[claimed].n} and I'll have something for you.` : 'You have found them all. Every one.'}`));
     if ((p.flags.leaflet_claimed ?? 0) >= LEAF_REWARDS.length && !questDone(p, 'leaflet')) setQuest(w, 'leaflet', 2, true);
     return { lines };
   },

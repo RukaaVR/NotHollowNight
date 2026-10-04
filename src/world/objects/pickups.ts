@@ -62,7 +62,14 @@ export class Pickup extends Entity {
         break;
       }
       case 'relic': {
-        if (!pr.relics.includes(this.value)) pr.relics.push(this.value);
+        if (pr.relics.includes(this.value)) {
+          // Already carried over (Veilfall+): the echo of it becomes fragments instead.
+          pr.fragments += 200;
+          sfx('pickup');
+          w.ui.toast('+200 Veil Fragments', 'You already carry this relic. Its echo dissolves into fragments.', 'item');
+          break;
+        }
+        pr.relics.push(this.value);
         const r = RELIC_BY_ID.get(this.value)!;
         sfx('pickup_rare');
         w.ui.itemGet(r.name, `${r.desc}\n\nEquip relics at a Veil Shrine. Costs ${r.cost} thread${r.cost > 1 ? 's' : ''}.`, r.color);

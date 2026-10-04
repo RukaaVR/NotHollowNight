@@ -1067,6 +1067,9 @@ export class Player {
     const st = w.stats;
     let amount = dmg * w.diff.enemyDamage * w.settings.assistDamage * st.damageTakenMult;
     amount = Math.max(0.5, Math.round(amount * 2) / 2);
+    // Boss rematch modifiers: Ascended doubles damage, One Breath is lethal.
+    if (w.challengeBoss && w.challengeMod === 1) amount *= 2;
+    if (w.challengeBoss && w.challengeMod === 2) amount = this.vigor;
     this.vigor = Math.max(0, this.vigor - amount);
     w.progress.stats.damageTaken += amount;
     if (w.challengeBoss) w.challengeHit = true;

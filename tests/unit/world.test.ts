@@ -86,7 +86,10 @@ describe('world layout', () => {
     }
     const seen = new Set(['th_01']);
     const q = ['th_01'];
-    while (q.length) for (const n of adj.get(q.shift()!) ?? []) if (!seen.has(n)) (seen.add(n), q.push(n));
+    while (q.length) for (const n of adj.get(q.shift()!) ?? []) if (!seen.has(n)) {
+      seen.add(n);
+      q.push(n);
+    }
     expect(LAYOUT.filter((e) => !seen.has(e.id)).map((e) => e.id)).toEqual([]);
   });
 

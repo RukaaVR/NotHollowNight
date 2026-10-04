@@ -61,7 +61,7 @@ export const oldWick: NpcDef = {
           L(W, 'Take this. The lamplighters kept it for whoever lit the Great Lamp again. I never thought it\'d be anyone but me.'),
         ] };
       }
-      return { lines: [L(W, `A good wick. That makes ${total} of four. The lamp\'s already listening.`)] };
+      return { lines: [L(W, `A good wick. That makes ${total} of four. The lamp's already listening.`)] };
     }
     const lines: DLine[] = [L(W, `${p.flags.wicks_given ?? 0} of four wicks. The root grows in the Grove. The crystal sings in the Caverns. The cinder never sleeps in the Foundry. The tide hides in the drowned streets.`)];
     if (n.talks > 3 && n.once('wick_story')) lines.push(L(W, 'I was nine when the Descent happened. I carried my father\'s lamp the whole way down. I don\'t remember his face. I remember the lamp.'));
@@ -620,7 +620,7 @@ export const seraphelEcho: NpcDef = {
       L('Seraphel', 'Below us, Orun dreams. The dream is the Veil, and the nightmare is what the dream became when we forgot what was above.'),
     ];
     if (te.ok) lines.push(L('Seraphel', 'You carry every echo. You lit the lamp. You let me go. When you reach the Dreamer, do not take its place. Wake it — gently, the way I used to wake you.'));
-    else lines.push(L('Seraphel', `The Veil still forgets too much. ${te.missing.join('; ')}. If you go now, you can only take the Dreamer\'s place.`));
+    else lines.push(L('Seraphel', `The Veil still forgets too much. ${te.missing.join('; ')}. If you go now, you can only take the Dreamer's place.`));
     return { lines };
   },
   draw(ctx, n) {
