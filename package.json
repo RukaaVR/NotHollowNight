@@ -1,0 +1,26 @@
+{
+  "name": "veilfall",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "VEILFALL - an original hand-drawn-style dark fantasy metroidvania",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "validate": "npm run typecheck && npm run lint && npm run test && npm run build && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@playwright/test": "1.56.1",
+    "eslint": "^9.39.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vite": "^7.3.0",
+    "vitest": "^4.1.0"
+  }
+}
