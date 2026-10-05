@@ -35,6 +35,7 @@ type Phase = 'panels' | 'credits' | 'summary';
 
 /** Ending cinematic → credits → journey summary → Veilfall+ or title. */
 export class EndingScene implements Scene {
+  readonly id = 'ending';
   private phase: Phase = 'panels';
   private player: PanelPlayer;
   private t = 0;

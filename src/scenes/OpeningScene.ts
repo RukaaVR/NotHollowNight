@@ -11,6 +11,7 @@ import { GameScene } from './GameScene';
 
 /** The opening cinematic. Confirm advances a panel; holding Back skips it entirely. */
 export class OpeningScene implements Scene {
+  readonly id = 'opening';
   private player = new PanelPlayer(OPENING);
   private hold = 0;
   private out = 0;

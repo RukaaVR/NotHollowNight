@@ -290,6 +290,7 @@ export class ShopOverlay extends Overlay {
   private msgT = 0;
   constructor(private w: GameWorld, private shopId: string) {
     super();
+    this.opaque = true;
   }
   private items(): ShopItem[] {
     return SHOP_BY_ID.get(this.shopId)?.items(this.w.progress) ?? [];
@@ -448,6 +449,7 @@ export class TravelOverlay extends Overlay {
   private nav = new Nav();
   constructor(private w: GameWorld) {
     super();
+    this.opaque = true;
   }
   private gates(): string[] {
     return Object.keys(this.w.progress.veilGates).filter((id) => this.w.map.get(id));

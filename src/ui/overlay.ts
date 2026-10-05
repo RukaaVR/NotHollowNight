@@ -6,6 +6,8 @@ export abstract class Overlay {
   closed = false;
   /** Freeze the world while this overlay is open. */
   pauses = true;
+  /** Covers the screen: the HUD is hidden underneath. */
+  opaque = false;
   t = 0;
   abstract update(dt: number, input: InputState): void;
   abstract draw(ctx: CanvasRenderingContext2D, time: number): void;

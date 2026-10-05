@@ -2,6 +2,10 @@ import { Game } from './core/Game';
 import { TitleScene } from './scenes/TitleScene';
 import { GameScene } from './scenes/GameScene';
 import { newProgress } from './progression/Progress';
+import { createEnemy, ENEMY_DEFS } from './enemies/registry';
+import { BOSSES } from './bosses/registry';
+import { ABILITIES } from './abilities/abilities';
+import { events } from './core/events';
 
 declare global {
   interface Window {
@@ -9,6 +13,8 @@ declare global {
       game: Game;
       /** Start gameplay immediately in a fresh memory-only journey (tests / debug). */
       quickStart: (room?: string) => GameScene;
+      /** Registries and helpers for automated tests and the debug console. */
+      lib: Record<string, unknown>;
     };
   }
 }
@@ -26,7 +32,12 @@ function boot(): void {
       game.setScene(s);
       return s;
     };
-    window.__veilfall = { game, quickStart };
+    const sfxLog: string[] = [];
+    events.on('sfx', (e) => {
+      sfxLog.push(e.id);
+      if (sfxLog.length > 500) sfxLog.shift();
+    });
+    window.__veilfall = { game, quickStart, lib: { createEnemy, ENEMY_DEFS, BOSSES, ABILITIES, sfxLog } };
     if (params.get('scene') === 'game') quickStart(params.get('room') ?? undefined);
     else game.setScene(new TitleScene(game));
     // Tests drive the simulation deterministically with ?manual=1.

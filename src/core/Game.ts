@@ -7,6 +7,7 @@ import { UI } from '../ui/text';
 import { events } from './events';
 
 export interface Scene {
+  readonly id: string;
   update(dt: number): void;
   render(time: number): void;
   enter?(): void;

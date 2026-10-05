@@ -51,6 +51,7 @@ export class PauseMenu extends Overlay {
 
   constructor(private w: GameWorld, readonly mode: MenuMode, private hooks: MenuHooks) {
     super();
+    this.opaque = true;
     this.tabs = mode === 'shrine' ? ['Relics', 'Map', 'Abilities', 'Journal', 'Rise'] : ['Map', 'Relics', 'Inventory', 'Abilities', 'Journal', 'Settings', 'System'];
     this.map = new MapView(w);
     this.settingsView = new SettingsView(hooks.settings, hooks.input, hooks.onSettingsChanged);

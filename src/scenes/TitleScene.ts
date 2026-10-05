@@ -40,6 +40,7 @@ const motes: { x: number; y: number; z: number; p: number }[] = [];
  * then the main menu and save slot management.
  */
 export class TitleScene implements Scene {
+  readonly id = 'title';
   private t = 0;
   private mode: Mode = 'menu';
   private idx = 0;

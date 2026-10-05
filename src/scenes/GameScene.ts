@@ -26,6 +26,7 @@ export const TOTALS = TOTALS_FOR_SAVES;
 
 /** The in-game scene: simulation, rendering, HUD and every modal overlay. */
 export class GameScene implements Scene, WorldUI {
+  readonly id = 'game';
   readonly world: GameWorld;
   readonly hud = new HUD();
   private overlays: (Overlay & { onClose?: () => void })[] = [];
@@ -257,7 +258,8 @@ export class GameScene implements Scene, WorldUI {
         const cam = w.camera;
         prompt = { x: (target.cx - cam.left) * cam.zoom, y: (target.y - 10 - cam.top) * cam.zoom, label: target.interactLabel?.() ?? 'Interact' };
       }
-      if (!this.photo) this.hud.draw(ctx, w, time, prompt);
+      if (w.deathT > 0) this.hud.banner = null;
+      if (!this.photo && !this.overlays.some((o) => o.opaque)) this.hud.draw(ctx, w, time, prompt);
       // Death caption
       if (w.deathT > 0.8) {
         const a = Math.min(1, (w.deathT - 0.8) / 0.8);

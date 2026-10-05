@@ -456,7 +456,7 @@ export class Renderer {
   private drawLighting(w: GameWorld, time: number, left: number, top: number, S: number): void {
     const room = w.room;
     const pal = w.palette;
-    let dark = pal.darkness * 0.82 + (room.dark === 1 ? 0.12 : room.dark === 2 ? 0.32 : 0) + w.extraDarkness;
+    let dark = pal.darkness * 0.64 + (room.dark === 1 ? 0.12 : room.dark === 2 ? 0.32 : 0) + w.extraDarkness;
     if (this.settings.highContrast) dark *= 0.75;
     dark = clamp(dark, 0, 0.97);
     if (dark < 0.02) return;

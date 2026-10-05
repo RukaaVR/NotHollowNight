@@ -34,7 +34,7 @@ export const DEFAULT_KEYS: KeyBindings = {
   map: ['Tab', 'KeyM'],
   pause: ['Escape', 'KeyP'],
   confirm: ['Enter', 'Space', 'KeyZ', 'KeyJ'],
-  cancel: ['Escape', 'Backspace', 'KeyX'],
+  cancel: ['Escape', 'Backspace'],
   tabL: ['KeyQ', 'PageUp'],
   tabR: ['KeyR', 'PageDown'],
 };

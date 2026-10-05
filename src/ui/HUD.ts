@@ -28,6 +28,8 @@ export class HUD {
   private bossShown = 0;
 
   toast(text: string, sub?: string, kind = 'info'): void {
+    // Room names replace each other instead of piling up.
+    if (kind === 'area') this.toasts = this.toasts.filter((t) => t.kind !== 'area');
     this.toasts.push({ text, sub, kind, t: 0 });
     if (this.toasts.length > 4) this.toasts.shift();
   }
@@ -43,6 +45,8 @@ export class HUD {
 
   bossIntro(name: string, title: string): void {
     this.bossTitle = { name, title, t: 0 };
+    this.banner = null;
+    this.toasts = this.toasts.filter((t) => t.kind !== 'area');
   }
 
   update(dt: number): void {
