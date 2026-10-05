@@ -28,7 +28,7 @@ export const LAYOUT: LayoutEntry[] = [
   // Ashen Foundry
   R('af_entry', 13, 4), R('af_halls', 14, 4, 2, 1), R('af_lift', 14, 5, 1, 3), R('af_deep', 14, 8), R('af_climb', 15, 5, 1, 4),
   R('af_forge', 16, 4, 1, 2), R('af_core', 16, 6, 2, 1), R('af_boss', 16, 7, 2, 1),
-  // Hollow Engine
+  // Silent Engine
   R('he_01', 17, 8), R('he_02', 18, 8, 2, 1), R('he_pass', 18, 9), R('he_03', 19, 9, 1, 2), R('he_04', 17, 10, 2, 1),
   R('he_boss', 17, 11, 2, 1), R('he_fall', 17, 12, 1, 3),
   // The Abyss
@@ -120,7 +120,7 @@ export const LINKS: LinkDef[] = [
   V('af_forge', 'af_core', 16, { climb: true }),
   V('af_core', 'af_boss', 16, { climb: true, ...bossGate('af_boss', 'af_boss_in') }),
   V('af_boss', 'he_01', 17, { climb: true }),
-  // Hollow Engine
+  // Silent Engine
   G('he_01', 'he_02', 8),
   V('he_02', 'he_03', 19, { climb: true }),
   V('he_02', 'he_pass', 18, { climb: true, ...flagGate('he_pass', 'he_shortcut', 'gate_he_shortcut') }),

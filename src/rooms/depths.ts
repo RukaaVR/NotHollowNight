@@ -1,6 +1,6 @@
 import type { Designs } from './index';
 
-/** THORN CHAPEL, VEILED GARDEN, ASHEN FOUNDRY, HOLLOW ENGINE, THE ABYSS and STARWELL OBSERVATORY. */
+/** THORN CHAPEL, VEILED GARDEN, ASHEN FOUNDRY, SILENT ENGINE, THE ABYSS and STARWELL OBSERVATORY. */
 export const DEPTHS: Designs = {
   // ------------------------------------------------------------ Thorn Chapel
   tc_gate: {
@@ -293,7 +293,7 @@ export const DEPTHS: Designs = {
     },
   },
 
-  // ------------------------------------------------------------ Hollow Engine
+  // ------------------------------------------------------------ Silent Engine
   he_01: {
     opts: { title: 'Engine Threshold' },
     design: (b) => {

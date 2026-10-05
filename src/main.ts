@@ -1,3 +1,9 @@
+import '@fontsource/cinzel/latin-400.css';
+import '@fontsource/cinzel/latin-600.css';
+import '@fontsource/cormorant-garamond/latin-400.css';
+import '@fontsource/cormorant-garamond/latin-400-italic.css';
+import '@fontsource/cormorant-garamond/latin-600.css';
+import '@fontsource/cormorant-garamond/latin-700.css';
 import { Game } from './core/Game';
 import { TitleScene } from './scenes/TitleScene';
 import { GameScene } from './scenes/GameScene';
@@ -54,4 +60,6 @@ function boot(): void {
   }
 }
 
-boot();
+// Canvas text only uses a web font once it has loaded, so wait (briefly) for them.
+const fontLoads = ['600 20px Cinzel', '400 20px Cinzel', '400 20px "Cormorant Garamond"', 'italic 400 20px "Cormorant Garamond"', '700 20px "Cormorant Garamond"'].map((f) => document.fonts.load(f).catch(() => undefined));
+void Promise.race([Promise.all(fontLoads), new Promise((r) => setTimeout(r, 1500))]).then(boot);

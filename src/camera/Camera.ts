@@ -1,6 +1,8 @@
 import { clamp, damp } from '../core/math';
 import { fxRng } from '../core/rng';
 
+/** Default framing: slightly closer than one room screen, for a more intimate view. */
+export const BASE_ZOOM = 1.18;
 export const VIEW_W = 480;
 export const VIEW_H = 270;
 
@@ -18,8 +20,8 @@ export interface CamBounds {
 export class Camera {
   x = VIEW_W / 2;
   y = VIEW_H / 2;
-  zoom = 1;
-  targetZoom = 1;
+  zoom = BASE_ZOOM;
+  targetZoom = BASE_ZOOM;
   bounds: CamBounds = { x: 0, y: 0, w: VIEW_W, h: VIEW_H };
   /** Cinematic lock region (e.g. boss arenas). Overrides follow when set. */
   lock: CamBounds | null = null;

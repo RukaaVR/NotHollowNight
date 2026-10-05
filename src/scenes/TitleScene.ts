@@ -1,7 +1,8 @@
 import type { Game, Scene } from '../core/Game';
 import { events, sfx } from '../core/events';
 import { VIEW_H, VIEW_W } from '../camera/Camera';
-import { UI, text, paragraph, panel, divider } from '../ui/text';
+import { UI, text, paragraph, panel, divider, font } from '../ui/text';
+import { filigree, flourish } from '../ui/ornament';
 import { Nav, confirmPressed, cancelPressed } from '../ui/overlay';
 import { SettingsView } from '../ui/SettingsView';
 import { SLOT_COUNT, type SlotSummary } from '../save/SaveSystem';
@@ -9,7 +10,7 @@ import { newProgress, completion, type Progress } from '../progression/Progress'
 import { region } from '../world/regions';
 import { formatTime, clamp } from '../core/math';
 import { Rng } from '../core/rng';
-import { glow } from '../rendering/draw';
+import { glow, makeCanvas } from '../rendering/draw';
 import { aerenFigure } from '../story/cinematics';
 import { TOTALS_FOR_SAVES } from './totals';
 import type { Difficulty } from '../accessibility/settings';
@@ -54,6 +55,7 @@ export class TitleScene implements Scene {
   private messageThen: (() => void) | null = null;
   private messageReturn: Mode = 'menu';
   private leaving = 0;
+  private soft: HTMLCanvasElement | null = null;
   private leaveTo: (() => void) | null = null;
 
   constructor(private game: Game, skipIntro = false) {
@@ -341,12 +343,25 @@ export class TitleScene implements Scene {
     const a = clamp((this.t - 4.8) / 1.4, 0, 1);
     if (a <= 0) return;
     const inMenu = this.mode === 'menu' || this.t < 6.5;
-    const y = inMenu ? 70 : 34;
+    const y = inMenu ? 78 : 36;
+    const size = inMenu ? 46 : 22;
     ctx.globalAlpha = a;
-    glow(ctx, VIEW_W / 2, y - 6, 110, `rgba(120,220,210,${0.1 + 0.04 * Math.sin(time)})`);
-    text(ctx, 'VEILFALL', VIEW_W / 2, y, inMenu ? 40 : 22, '#ece4d0', 'center', 'bold');
-    divider(ctx, VIEW_W / 2, y + (inMenu ? 14 : 9), inMenu ? 200 : 120);
-    if (inMenu) text(ctx, 'a story the Veil forgot to finish', VIEW_W / 2, y + 28, 8, UI.dim, 'center', 'normal', true);
+    const pulse = 0.5 + 0.5 * Math.sin(time * 0.9);
+    glow(ctx, VIEW_W / 2, y - size * 0.3, inMenu ? 170 : 90, `rgba(225,235,255,${0.1 + 0.04 * pulse})`);
+    // Glowing engraved title
+    ctx.save();
+    ctx.shadowColor = 'rgba(220,235,255,0.9)';
+    ctx.shadowBlur = inMenu ? 14 : 8;
+    ctx.font = font(size, 'display');
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#f4f2fa';
+    ctx.fillText('VEILFALL', VIEW_W / 2, y);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+    if (inMenu) {
+      filigree(ctx, VIEW_W / 2, y - size - 8, 118, 9, 'rgba(240,244,255,0.95)', 'rgba(200,225,255,0.8)');
+      filigree(ctx, VIEW_W / 2, y + 16, 132, 10, 'rgba(240,244,255,0.95)', 'rgba(200,225,255,0.8)', true);
+    } else divider(ctx, VIEW_W / 2, y + 8, 120);
     ctx.globalAlpha = 1;
   }
 
@@ -359,7 +374,19 @@ export class TitleScene implements Scene {
     ctx.beginPath();
     ctx.rect(0, 0, VIEW_W, VIEW_H);
     ctx.clip();
-    this.drawWorld(ctx, time);
+    // The scene behind the logo is painted at half resolution: a natural soft focus.
+    if (!this.soft) this.soft = makeCanvas(VIEW_W / 2, VIEW_H / 2);
+    const sc = this.soft.getContext('2d')!;
+    sc.setTransform(0.5, 0, 0, 0.5, 0, 0);
+    this.drawWorld(sc, time);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(this.soft, 0, 0, VIEW_W, VIEW_H);
+    const vg = ctx.createRadialGradient(VIEW_W / 2, VIEW_H * 0.42, 40, VIEW_W / 2, VIEW_H / 2, VIEW_W * 0.62);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.72)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    this.drawSpecks(ctx, time);
     this.drawLogo(ctx, time);
     if (this.t >= 6.5) {
       const ma = clamp((this.t - 6.5) / 0.6, 0, 1);
@@ -392,16 +419,41 @@ export class TitleScene implements Scene {
     const items = this.items();
     items.forEach((it, i) => {
       const sel = i === this.idx;
-      const y = 150 + i * 18;
+      const y = 168 + i * 17;
+      const label = it.label.toUpperCase();
+      ctx.font = font(10, 'display');
+      const w = ctx.measureText(label).width / 2;
       if (sel) {
-        glow(ctx, VIEW_W / 2, y - 3, 40, 'rgba(120,220,210,0.12)');
-        const w = 46 + it.label.length * 3;
-        const bob = Math.sin(time * 3) * 1.5;
-        text(ctx, '◆', VIEW_W / 2 - w - bob, y, 6, UI.gold, 'center');
-        text(ctx, '◆', VIEW_W / 2 + w + bob, y, 6, UI.gold, 'center');
+        glow(ctx, VIEW_W / 2, y - 4, 46, 'rgba(220,235,255,0.10)');
+        const bob = Math.sin(time * 2.5) * 1.2;
+        flourish(ctx, VIEW_W / 2 - w - 12 - bob, y - 3.5, -1, 'rgba(240,244,255,0.95)');
+        flourish(ctx, VIEW_W / 2 + w + 12 + bob, y - 3.5, 1, 'rgba(240,244,255,0.95)');
       }
-      text(ctx, it.label.toUpperCase(), VIEW_W / 2, y, sel ? 10 : 9, sel ? UI.gold : UI.ink, 'center', sel ? 'bold' : 'normal');
+      ctx.save();
+      if (sel) {
+        ctx.shadowColor = 'rgba(220,235,255,0.7)';
+        ctx.shadowBlur = 6;
+      }
+      ctx.textAlign = 'center';
+      ctx.fillStyle = sel ? '#ffffff' : 'rgba(225,228,240,0.78)';
+      ctx.fillText(label, VIEW_W / 2, y);
+      ctx.restore();
     });
+  }
+
+  /** Dark drifting specks in the foreground, sharp against the soft scene. */
+  private drawSpecks(ctx: CanvasRenderingContext2D, time: number): void {
+    const a = clamp((this.t - 1) / 2, 0, 1);
+    if (a <= 0) return;
+    ctx.fillStyle = `rgba(4,4,8,${0.85 * a})`;
+    for (let i = 0; i < motes.length; i += 3) {
+      const m = motes[i];
+      const x = (m.x * 1.7 + time * 5 * m.z + Math.sin(time * 0.4 + m.p) * 10) % VIEW_W;
+      const y = (m.y * 1.3 + time * 3 * m.z) % VIEW_H;
+      ctx.beginPath();
+      ctx.arc(x, y, 0.8 + m.z * 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   private drawSlots(ctx: CanvasRenderingContext2D): void {

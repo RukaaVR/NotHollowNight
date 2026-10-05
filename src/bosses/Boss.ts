@@ -1,3 +1,4 @@
+import { BASE_ZOOM } from '../camera/Camera';
 import { Entity, type HitInfo, type HitResult } from '../world/Entity';
 import type { BossLike, GameWorld } from '../world/GameWorld';
 import { clamp, sign, type Rect } from '../core/math';
@@ -323,7 +324,7 @@ export abstract class Boss extends Entity implements BossLike {
     w.timeScale = 0.25;
     w.camera.shake(1, 1.2);
     w.camera.focus = { x: this.cx, y: this.cy };
-    w.camera.targetZoom = 1.15;
+    w.camera.targetZoom = BASE_ZOOM * 1.15;
     events.emit('flash', { color: '#ffffff', time: 0.6, alpha: 0.7 });
     sfx('boss_die', this.cx, this.cy);
     w.input.rumble(1, 1, 900);
@@ -338,7 +339,7 @@ export abstract class Boss extends Entity implements BossLike {
     this.stateT = 0;
     this.bossActive = false;
     w.camera.focus = null;
-    w.camera.targetZoom = 1;
+    w.camera.targetZoom = BASE_ZOOM;
     w.camera.lock = null;
     w.victoryT = 6;
     if (this.challenge) {

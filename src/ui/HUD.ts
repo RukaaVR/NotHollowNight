@@ -1,5 +1,6 @@
+import { filigree } from './ornament';
 import type { GameWorld } from '../world/GameWorld';
-import { UI, text, panel, divider, font } from './text';
+import { UI, text, panel, font } from './text';
 import { relicIcon } from './icons';
 import { RELIC_BY_ID } from '../relics/relics';
 import { glow } from '../rendering/draw';
@@ -106,10 +107,43 @@ export class HUD {
     ctx.restore();
     const canMend = p.aether >= w.stats.mendCost && w.stats.canMend;
     ctx.strokeStyle = this.aetherFlash > 0 && Math.floor(time * 12) % 2 === 0 ? sem.danger : canMend ? '#e8f8ff' : '#7a8496';
-    ctx.lineWidth = 1.2;
+    ctx.save();
+    ctx.shadowColor = 'rgba(220,235,255,0.6)';
+    ctx.shadowBlur = 4;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(vx, vy, R, 0, TAU);
+    ctx.arc(vx, vy, R + 0.4, 0, TAU);
     ctx.stroke();
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(6,6,12,0.9)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(vx, vy, R - 1, 0, TAU);
+    ctx.stroke();
+    // Silver wire sweeping from the vessel beneath the vigor row, ending in a curl
+    ctx.save();
+    ctx.strokeStyle = 'rgba(236,240,255,0.85)';
+    ctx.shadowColor = 'rgba(220,235,255,0.5)';
+    ctx.shadowBlur = 3;
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 1;
+    const endX = 34 + p.maxVigor * 12;
+    ctx.beginPath();
+    ctx.moveTo(vx + R * 0.8, vy + R * 0.55);
+    ctx.bezierCurveTo(vx + R + 8, vy + 2, vx + R + 14, vy + 4, endX - 6, vy + 3);
+    ctx.quadraticCurveTo(endX + 2, vy + 2.5, endX + 1, vy - 1.5);
+    ctx.quadraticCurveTo(endX - 2, vy - 3.5, endX - 3, vy - 0.5);
+    ctx.stroke();
+    // Three small points crowning the vessel
+    ctx.fillStyle = 'rgba(236,240,255,0.9)';
+    for (const [ox, h] of [[-5, 3], [0, 4.5], [5, 3]] as const) {
+      ctx.beginPath();
+      ctx.moveTo(vx + ox - 1.6, vy - R - 0.6);
+      ctx.lineTo(vx + ox, vy - R - 0.6 - h);
+      ctx.lineTo(vx + ox + 1.6, vy - R - 0.6);
+      ctx.fill();
+    }
+    ctx.restore();
     // Thresholds for each mend's worth
     ctx.strokeStyle = 'rgba(255,255,255,0.35)';
     ctx.lineWidth = 0.6;
@@ -130,23 +164,23 @@ export class HUD {
 
     // ---- Vigor diamonds
     const maxV = p.maxVigor;
-    let dx = 32;
-    const dy = 9;
+    let dx = 34;
+    const dy = 8;
     for (let i = 0; i < maxV; i++) {
       const fill = clamp(p.vigor - i, 0, 1);
-      drawDiamond(ctx, dx, dy, 4.6, fill, sem.health, this.hurtFlash > 0 && i === Math.floor(p.vigor) ? sem.danger : null);
-      dx += 11;
+      drawDiamond(ctx, dx, dy, 4.4, fill, sem.health, this.hurtFlash > 0 && i === Math.floor(p.vigor) ? sem.danger : null);
+      dx += 12;
     }
     if (p.gloamed) {
-      drawDiamond(ctx, dx, dy, 4.6, 0, '#6a2a8a', null);
+      drawDiamond(ctx, dx, dy, 4.4, 0, '#6a2a8a', null);
       ctx.strokeStyle = '#b080ff';
       ctx.beginPath();
       ctx.moveTo(dx - 3, dy - 2);
       ctx.lineTo(dx + 2, dy + 3);
       ctx.stroke();
-      dx += 11;
+      dx += 12;
     }
-    if (p.shield > 0) drawDiamond(ctx, dx, dy, 4.6, 1, '#ffe08a', null);
+    if (p.shield > 0) drawDiamond(ctx, dx, dy, 4.4, 1, '#ffe08a', null);
     // Corruption gauge
     if (p.corruption > 0) {
       ctx.fillStyle = 'rgba(20,10,30,0.8)';
@@ -155,7 +189,7 @@ export class HUD {
       ctx.fillRect(32, 17, (p.corruption / 100) * 60, 2.5);
     }
     // ---- Fragments
-    const fy = 26;
+    const fy = 28;
     ctx.fillStyle = '#cfd8ff';
     ctx.beginPath();
     ctx.moveTo(34, fy - 3);
@@ -163,7 +197,7 @@ export class HUD {
     ctx.lineTo(34, fy + 3);
     ctx.lineTo(31.5, fy);
     ctx.fill();
-    text(ctx, String(w.progress.fragments), 40, fy + 3, 8, '#e4ecff');
+    text(ctx, String(w.progress.fragments), 40, fy + 3.5, 9, '#eef2ff', 'left', 'display');
     const rem = w.progress.remnant;
     if (rem) text(ctx, `Remnant: ${rem.amount} ◆ — ${region(rem.room.split('_')[0]).name}`, 32, fy + 12, 6, '#9fb8ff', 'left', 'normal', true);
     // ---- Equipped relics (small)
@@ -200,7 +234,7 @@ export class HUD {
       const bw = 200;
       const bx = (VIEW_W - bw) / 2;
       const by = VIEW_H - 24;
-      text(ctx, boss.bossName, VIEW_W / 2, by - 4, 8, UI.gold, 'center', 'bold');
+      text(ctx, boss.bossName.toUpperCase(), VIEW_W / 2, by - 4, 7.5, '#eef0f8', 'center', 'display');
       ctx.fillStyle = 'rgba(10,8,14,0.85)';
       ctx.fillRect(bx - 1, by - 1, bw + 2, 6);
       const hpf = clamp(boss.hp / boss.maxHp, 0, 1);
@@ -242,6 +276,27 @@ export class HUD {
     for (const t of this.toasts) {
       const a = Math.min(1, t.t * 4, (4.5 - t.t) * 2);
       ctx.globalAlpha = a;
+      if (t.kind === 'area') {
+        // Room names: quiet engraved caption, no box.
+        const rx = VIEW_W - 14 + (1 - Math.min(1, t.t * 3)) * 10;
+        ctx.save();
+        ctx.font = font(7.5, 'display');
+        ctx.textAlign = 'right';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 3;
+        ctx.fillStyle = '#eef0f8';
+        ctx.fillText(t.text.toUpperCase(), rx, ty + 9);
+        const tw = ctx.measureText(t.text.toUpperCase()).width;
+        ctx.restore();
+        ctx.strokeStyle = 'rgba(236,240,255,0.7)';
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(rx - tw, ty + 13);
+        ctx.lineTo(rx, ty + 13);
+        ctx.stroke();
+        ty += 20;
+        continue;
+      }
       const wbox = 150;
       const x = VIEW_W - wbox - 8 + (1 - Math.min(1, t.t * 4)) * 20;
       const h = t.sub ? 24 : 15;
@@ -268,10 +323,10 @@ export class HUD {
       const a = Math.min(1, b.t / 0.8, (dur - b.t) / 0.8);
       ctx.globalAlpha = Math.max(0, a);
       const big = !!b.sub;
-      text(ctx, b.name.toUpperCase(), VIEW_W / 2, big ? 96 : 40, big ? 18 : 9, UI.gold, 'center', 'bold');
+      glowText(ctx, b.name.toUpperCase(), VIEW_W / 2, big ? 96 : 40, big ? 20 : 9);
       if (big) {
-        divider(ctx, VIEW_W / 2, 104, 160 * Math.min(1, b.t), a);
-        text(ctx, b.sub, VIEW_W / 2, 118, 8, '#d8d0c0', 'center', 'normal', true);
+        filigree(ctx, VIEW_W / 2, 108, 70 + 40 * Math.min(1, b.t), 6, 'rgba(240,244,255,0.9)', 'rgba(200,225,255,0.7)');
+        text(ctx, b.sub, VIEW_W / 2, 128, 8.5, '#e4e6f0', 'center', 'normal', true);
       }
       ctx.globalAlpha = 1;
     }
@@ -281,52 +336,81 @@ export class HUD {
       const a = Math.min(1, Math.max(0, (b.t - 0.6) / 0.6), (3.6 - b.t) / 0.6);
       if (a > 0) {
         ctx.globalAlpha = a;
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
-        ctx.fillRect(0, VIEW_H * 0.62, VIEW_W, 46);
-        text(ctx, b.title, VIEW_W / 2, VIEW_H * 0.62 + 14, 7, '#c8c0b0', 'center', 'normal', true);
-        text(ctx, b.name, VIEW_W / 2, VIEW_H * 0.62 + 32, 16, '#f4e8c8', 'center', 'bold');
+        const band = ctx.createLinearGradient(0, VIEW_H * 0.58, 0, VIEW_H * 0.58 + 64);
+        band.addColorStop(0, 'rgba(0,0,0,0)');
+        band.addColorStop(0.5, 'rgba(0,0,0,0.45)');
+        band.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = band;
+        ctx.fillRect(0, VIEW_H * 0.58, VIEW_W, 64);
+        text(ctx, b.title, VIEW_W / 2, VIEW_H * 0.62 + 12, 8, '#dcdce8', 'center', 'normal', true);
+        glowText(ctx, b.name.toUpperCase(), VIEW_W / 2, VIEW_H * 0.62 + 32, 17);
+        filigree(ctx, VIEW_W / 2, VIEW_H * 0.62 + 41, 90, 5, 'rgba(240,244,255,0.85)', null);
         ctx.globalAlpha = 1;
       }
       if (b.t > 2.9 && b.t < 3.6) {
         ctx.globalAlpha = Math.min(1, (3.6 - b.t) * 2);
-        text(ctx, 'BEGIN', VIEW_W / 2, VIEW_H * 0.62 + 56, 9, UI.gold, 'center', 'bold');
+        glowText(ctx, 'BEGIN', VIEW_W / 2, VIEW_H * 0.62 + 60, 9);
         ctx.globalAlpha = 1;
       }
     }
   }
 }
 
-function drawDiamond(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, fill: number, color: string, flash: string | null): void {
-  ctx.fillStyle = 'rgba(8,8,14,0.85)';
+/** Engraved white capitals with a soft halo, for banners and title cards. */
+function glowText(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, size: number): void {
+  ctx.save();
+  ctx.font = font(size, 'display');
+  ctx.textAlign = 'center';
+  ctx.shadowColor = 'rgba(215,230,255,0.85)';
+  ctx.shadowBlur = size * 0.45;
+  ctx.fillStyle = '#f6f6fc';
+  ctx.fillText(s, x, y);
+  ctx.restore();
+}
+
+/** Teardrop path: pointed top, round base (a single "veil drop" of vigor). */
+function dropPath(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
   ctx.beginPath();
-  ctx.moveTo(x, y - r - 1);
-  ctx.lineTo(x + r * 0.8 + 1, y);
-  ctx.lineTo(x, y + r + 1);
-  ctx.lineTo(x - r * 0.8 - 1, y);
+  ctx.moveTo(x, y - r * 1.25);
+  ctx.bezierCurveTo(x + r * 0.35, y - r * 0.55, x + r * 0.95, y - r * 0.1, x + r * 0.95, y + r * 0.35);
+  ctx.arc(x, y + r * 0.35, r * 0.95, 0, Math.PI);
+  ctx.bezierCurveTo(x - r * 0.95, y - r * 0.1, x - r * 0.35, y - r * 0.55, x, y - r * 1.25);
   ctx.closePath();
+}
+
+function drawDiamond(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, fill: number, color: string, flash: string | null): void {
+  // Ink backing
+  ctx.fillStyle = 'rgba(6,6,12,0.9)';
+  dropPath(ctx, x, y, r + 1.1);
   ctx.fill();
   if (fill > 0) {
     ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(x, y - r);
-    ctx.lineTo(x + r * 0.8, y);
-    ctx.lineTo(x, y + r);
-    ctx.lineTo(x - r * 0.8, y);
-    ctx.closePath();
+    dropPath(ctx, x, y, r);
     ctx.clip();
     ctx.fillStyle = flash ?? color;
-    ctx.fillRect(x - r, y + r - fill * r * 2, r * 2, fill * r * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.fillRect(x - r, y - r, r, r * 0.6);
+    ctx.fillRect(x - r * 1.2, y + r * 1.4 - fill * r * 2.8, r * 2.4, fill * r * 2.8);
+    // Porcelain shading and a highlight
+    ctx.fillStyle = 'rgba(90,90,130,0.35)';
+    ctx.beginPath();
+    ctx.arc(x + r * 0.5, y + r * 0.6, r * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.ellipse(x - r * 0.35, y - r * 0.1, r * 0.22, r * 0.45, -0.3, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
+    ctx.save();
+    ctx.shadowColor = 'rgba(230,236,255,0.6)';
+    ctx.shadowBlur = 3;
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 0.6;
+    dropPath(ctx, x, y, r);
+    ctx.stroke();
+    ctx.restore();
+  } else {
+    ctx.strokeStyle = 'rgba(150,150,175,0.55)';
+    ctx.lineWidth = 0.6;
+    dropPath(ctx, x, y, r * 0.8);
+    ctx.stroke();
   }
-  ctx.strokeStyle = fill > 0 ? '#ffffff' : '#6a6478';
-  ctx.lineWidth = 0.7;
-  ctx.beginPath();
-  ctx.moveTo(x, y - r);
-  ctx.lineTo(x + r * 0.8, y);
-  ctx.lineTo(x, y + r);
-  ctx.lineTo(x - r * 0.8, y);
-  ctx.closePath();
-  ctx.stroke();
 }

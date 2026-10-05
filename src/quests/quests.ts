@@ -45,8 +45,8 @@ export const QUESTS: QuestDef[] = [
     'The Pale Bloom took root. The garden remembers one more thing.',
   ] },
   { id: 'unit9', name: 'Memories of Unit Nine', giver: 'Unit Nine', stages: [
-    'A broken automaton in the Hollow Engine has lost its memory cores.',
-    'Recover Unit Nine\'s three Memory Cores from the Hollow Engine.',
+    'A broken automaton in the Silent Engine has lost its memory cores.',
+    'Recover Unit Nine\'s three Memory Cores from the Silent Engine.',
     'Unit Nine remembers. It wishes it did not.',
   ] },
   { id: 'leaflet', name: 'Leaflet\'s Collection', giver: 'Leaflet', stages: [

@@ -3,7 +3,7 @@ import type { InputState } from '../core/input';
 import type { GameWorld } from '../world/GameWorld';
 import type { Renderer } from '../rendering/Renderer';
 import { UI, text } from './text';
-import { VIEW_H, VIEW_W } from '../camera/Camera';
+import { BASE_ZOOM, VIEW_H, VIEW_W } from '../camera/Camera';
 import { sfx } from '../core/events';
 import type { PState } from '../player/Player';
 
@@ -78,8 +78,8 @@ export class PhotoMode extends Overlay {
       post.photoVignette = 1;
       post.photoExposure = 1;
       this.w.camera.focus = null;
-      this.w.camera.targetZoom = 1;
-      this.w.camera.zoom = 1;
+      this.w.camera.targetZoom = BASE_ZOOM;
+      this.w.camera.zoom = BASE_ZOOM;
       this.w.player.state = this.prevState === 'rest' ? 'rest' : 'normal';
       this.w.player.atkKind = null;
       this.close();

@@ -2,18 +2,24 @@
 export const UI = {
   textScale: 1,
   hudScale: 1,
-  gold: '#e8d4a0',
-  ink: '#f2ecdf',
-  dim: '#9a94a8',
-  faint: '#5a5668',
-  panel: 'rgba(10,9,16,0.88)',
-  panelEdge: 'rgba(232,212,160,0.35)',
+  /** Highlight colour for selections and headings: pale silver-white. */
+  gold: '#f4f0e4',
+  ink: '#e6e4ec',
+  dim: '#9c9aae',
+  faint: '#5a5868',
+  panel: 'rgba(6,6,12,0.86)',
+  panelEdge: 'rgba(236,240,255,0.32)',
   accent: '#9fe8ff',
 };
 
 export const SERIF = '"Cormorant Garamond", "EB Garamond", Georgia, "Times New Roman", serif';
 
+/** Engraved capitals for titles, banners and menus. */
+export const DISPLAY = '"Cinzel", "Trajan Pro", Georgia, serif';
+
+/** `weight` may be 'display' to use the engraved title face. */
 export function font(size: number, weight = 'normal', italic = false): string {
+  if (weight === 'display') return `600 ${Math.round(size * UI.textScale * 10) / 10}px ${DISPLAY}`;
   return `${italic ? 'italic ' : ''}${weight} ${Math.round(size * UI.textScale * 10) / 10}px ${SERIF}`;
 }
 
@@ -72,15 +78,18 @@ export function panel(ctx: CanvasRenderingContext2D, x: number, y: number, w: nu
   ctx.strokeStyle = UI.panelEdge;
   ctx.lineWidth = 0.6;
   ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
-  // Corner flourishes
-  ctx.fillStyle = UI.gold;
-  for (const [cx, cy] of [[x + 1.5, y + 1.5], [x + w - 1.5, y + 1.5], [x + 1.5, y + h - 1.5], [x + w - 1.5, y + h - 1.5]]) {
+  // Corner scrolls in silver wire
+  ctx.strokeStyle = 'rgba(236,240,255,0.75)';
+  ctx.lineWidth = 0.7;
+  ctx.lineCap = 'round';
+  for (const [cx, cy, sx, sy] of [[x + 1.5, y + 1.5, 1, 1], [x + w - 1.5, y + 1.5, -1, 1], [x + 1.5, y + h - 1.5, 1, -1], [x + w - 1.5, y + h - 1.5, -1, -1]]) {
     ctx.beginPath();
-    ctx.moveTo(cx, cy - 2.5);
-    ctx.lineTo(cx + 2.5, cy);
-    ctx.lineTo(cx, cy + 2.5);
-    ctx.lineTo(cx - 2.5, cy);
-    ctx.fill();
+    ctx.moveTo(cx + sx * 9, cy);
+    ctx.lineTo(cx, cy);
+    ctx.lineTo(cx, cy + sy * 9);
+    ctx.moveTo(cx + sx * 3, cy + sy * 6);
+    ctx.quadraticCurveTo(cx + sx * 3, cy + sy * 3, cx + sx * 6, cy + sy * 3);
+    ctx.stroke();
   }
   ctx.globalAlpha = 1;
 }
@@ -89,9 +98,9 @@ export function panel(ctx: CanvasRenderingContext2D, x: number, y: number, w: nu
 export function divider(ctx: CanvasRenderingContext2D, cx: number, y: number, w: number, alpha = 1): void {
   ctx.globalAlpha = alpha;
   const g = ctx.createLinearGradient(cx - w / 2, 0, cx + w / 2, 0);
-  g.addColorStop(0, 'rgba(232,212,160,0)');
-  g.addColorStop(0.5, 'rgba(232,212,160,0.8)');
-  g.addColorStop(1, 'rgba(232,212,160,0)');
+  g.addColorStop(0, 'rgba(236,240,255,0)');
+  g.addColorStop(0.5, 'rgba(236,240,255,0.8)');
+  g.addColorStop(1, 'rgba(236,240,255,0)');
   ctx.fillStyle = g;
   ctx.fillRect(cx - w / 2, y, w, 0.6);
   ctx.fillStyle = UI.gold;

@@ -725,7 +725,7 @@ export class GrievingCrown extends Boss {
 }
 
 // =====================================================================
-// THE CONDUCTOR — Hollow Engine. The Archon, fused to his machine.
+// THE CONDUCTOR — Silent Engine. The Archon, fused to his machine.
 // =====================================================================
 export class Conductor extends Boss {
   readonly id = 'conductor';

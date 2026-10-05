@@ -30,13 +30,7 @@ export function backdrop(region: RegionDef, scale: number, layerCount: number): 
   if (b) return b;
   for (const k of [...cache.keys()]) if (k.startsWith(region.id + ':')) cache.delete(k);
   if (cache.size > 6) cache.delete(cache.keys().next().value!);
-  const sky = makeCanvas(8, 270 * s);
-  const sc = sky.getContext('2d')!;
-  const g = sc.createLinearGradient(0, 0, 0, 270 * s);
-  g.addColorStop(0, region.palette.sky0);
-  g.addColorStop(1, region.palette.sky1);
-  sc.fillStyle = g;
-  sc.fillRect(0, 0, 8, 270 * s);
+  const sky = paintSky(region, s);
   const defs: { factor: number; color: string; depth: number; drift: number; blur: number }[] = [
     { factor: 0.18, color: region.palette.far, depth: 0, drift: 2, blur: 2.2 },
     { factor: 0.4, color: region.palette.mid, depth: 1, drift: 0, blur: 1.1 },
@@ -65,12 +59,78 @@ export function backdrop(region: RegionDef, scale: number, layerCount: number): 
   return b;
 }
 
+/**
+ * The luminous painted sky: a deep top fading to a bright haze, a soft glow
+ * where the light pools, and slanted shafts falling through the dark.
+ */
+function paintSky(region: RegionDef, s: number): HTMLCanvasElement {
+  const pal = region.palette;
+  const W = 240;
+  const H = 136;
+  const c = makeCanvas(Math.ceil(W * s), Math.ceil(H * s));
+  const g = c.getContext('2d')!;
+  g.scale(s, s);
+  const grad = g.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, pal.sky0);
+  grad.addColorStop(0.55, mix(pal.sky0, pal.sky1, 0.75));
+  grad.addColorStop(1, pal.sky1);
+  g.fillStyle = grad;
+  g.fillRect(0, 0, W, H);
+  const rng = new Rng(hashString(region.id) + 31);
+  // Pool of light
+  const gx = W * (0.35 + rng.next() * 0.3);
+  const gy = H * (0.3 + rng.next() * 0.2);
+  const glow = g.createRadialGradient(gx, gy, 0, gx, gy, W * 0.55);
+  glow.addColorStop(0, withAlpha(mix(pal.sky1, pal.accent, 0.55), 0.75));
+  glow.addColorStop(0.35, withAlpha(mix(pal.sky1, pal.accent, 0.25), 0.35));
+  glow.addColorStop(1, withAlpha(pal.sky1, 0));
+  g.fillStyle = glow;
+  g.fillRect(0, 0, W, H);
+  // Light shafts
+  if (region.id !== 'ab') {
+    g.globalCompositeOperation = 'lighter';
+    const n = 3 + Math.floor(rng.next() * 3);
+    for (let i = 0; i < n; i++) {
+      const x = gx + (rng.next() - 0.5) * W * 0.7;
+      const w = 8 + rng.next() * 22;
+      const slant = 30 + rng.next() * 30;
+      const sg = g.createLinearGradient(0, 0, 0, H);
+      const a = 0.05 + rng.next() * 0.07;
+      sg.addColorStop(0, withAlpha(pal.accent, a));
+      sg.addColorStop(0.7, withAlpha(pal.accent, a * 0.4));
+      sg.addColorStop(1, withAlpha(pal.accent, 0));
+      g.fillStyle = sg;
+      g.beginPath();
+      g.moveTo(x, -4);
+      g.lineTo(x + w, -4);
+      g.lineTo(x + w * 2.2 + slant, H);
+      g.lineTo(x + slant, H);
+      g.closePath();
+      g.fill();
+    }
+    g.globalCompositeOperation = 'source-over';
+  }
+  // Fine grain dithers the gradients so they never band.
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  const img = g.getImageData(0, 0, c.width, c.height);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const n = (rng.next() - 0.5) * 5;
+    d[i] += n;
+    d[i + 1] += n;
+    d[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+  return c;
+}
+
 function paintLayer(ctx: CanvasRenderingContext2D, region: RegionDef, depth: number, color: string): void {
   const rng = new Rng(hashString(region.id) + depth * 977);
   const pal = region.palette;
   const W = LAYER_W;
   const H = LAYER_H;
-  const fog = mix(color, pal.sky1, 0.15 * (3 - depth));
+  // Atmospheric perspective: distant shapes dissolve into the bright haze.
+  const fog = mix(color, pal.sky1, [0.5, 0.3, 0.12, 0][depth] ?? 0);
   ctx.fillStyle = fog;
   ctx.strokeStyle = fog;
   const underground = region.bg !== 'observatory' && region.bg !== 'ruins';
@@ -98,7 +158,7 @@ function paintLayer(ctx: CanvasRenderingContext2D, region: RegionDef, depth: num
   if (depth < 2) {
     const g = ctx.createLinearGradient(0, H * 0.3, 0, H);
     g.addColorStop(0, withAlpha(pal.sky1, 0));
-    g.addColorStop(1, withAlpha(pal.sky1, 0.35 - depth * 0.15));
+    g.addColorStop(1, withAlpha(mix(pal.sky1, pal.accent, 0.15), 0.5 - depth * 0.2));
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
   }
@@ -622,4 +682,111 @@ function abyss(ctx: CanvasRenderingContext2D, rng: Rng, W: number, H: number, c:
       ctx.fillRect(x - 0.8, y - 0.8, 1.6, 1.6);
     }
   }
+}
+
+// ---------------------------------------------------------------- foreground
+
+const fgCache = new Map<string, HTMLCanvasElement>();
+export const FG_W = 960;
+
+/**
+ * Dark, softly blurred silhouettes that frame the bottom and top of the
+ * screen and slide past faster than the world, for painterly depth.
+ */
+export function foreground(region: RegionDef, scale: number): HTMLCanvasElement {
+  const s = Math.max(0.5, Math.min(2.5, Math.round(scale * 2) / 2));
+  const key = `${region.id}:${s}`;
+  const hit = fgCache.get(key);
+  if (hit) return hit;
+  if (fgCache.size > 4) fgCache.delete(fgCache.keys().next().value!);
+  const W = FG_W;
+  const H = 270;
+  const c = makeCanvas(Math.ceil(W * s), Math.ceil(H * s));
+  const g = c.getContext('2d')!;
+  g.scale(s, s);
+  const rng = new Rng(hashString(region.id) + 4242);
+  const col = mix(region.palette.tileDark, '#000000', 0.5);
+  g.fillStyle = col;
+  g.strokeStyle = col;
+  g.lineCap = 'round';
+  const style = region.style;
+  // Bottom: clusters of rocks, grass and posts separated by open gaps.
+  let x = rng.next() * 80;
+  while (x < W - 40) {
+    const w = 40 + rng.next() * 90;
+    const h = 8 + rng.next() * 10;
+    g.beginPath();
+    g.moveTo(x, H);
+    g.quadraticCurveTo(x + w * 0.2, H - h, x + w * 0.5, H - h * 1.1);
+    g.quadraticCurveTo(x + w * 0.85, H - h, x + w, H);
+    g.fill();
+    // Grass blades / fronds
+    const blades = style === 'metal' || style === 'engine' || style === 'brick' ? 0 : 6 + Math.floor(rng.next() * 8);
+    for (let i = 0; i < blades; i++) {
+      const bx = x + w * 0.15 + rng.next() * w * 0.7;
+      const bh = 8 + rng.next() * 18;
+      const lean = (rng.next() - 0.5) * 10;
+      g.lineWidth = 1.6 + rng.next();
+      g.beginPath();
+      g.moveTo(bx, H - h * 0.6);
+      g.quadraticCurveTo(bx + lean * 0.3, H - h - bh * 0.6, bx + lean, H - h - bh);
+      g.stroke();
+    }
+    // Ornamental post (city / village / ruins / chapel)
+    if ((style === 'brick' || style === 'marble' || style === 'wood' || style === 'stone' || style === 'metal') && rng.chance(0.45)) {
+      const px = x + w * 0.5;
+      const ph = 34 + rng.next() * 30;
+      g.fillRect(px - 2.5, H - ph, 5, ph);
+      g.beginPath();
+      g.arc(px, H - ph, 7, 0, Math.PI * 2);
+      g.fill();
+      g.lineWidth = 2;
+      g.beginPath();
+      g.arc(px, H - ph, 11, Math.PI * 0.15, Math.PI * 0.85, true);
+      g.stroke();
+    }
+    x += w + 120 + rng.next() * 200;
+  }
+  // Top: hanging roots, chains or stalactites.
+  x = rng.next() * 60;
+  while (x < W - 20) {
+    const n = 2 + Math.floor(rng.next() * 4);
+    for (let i = 0; i < n; i++) {
+      const hx = x + i * (6 + rng.next() * 10);
+      const len = 14 + rng.next() * 30;
+      g.lineWidth = 1.5 + rng.next() * 2.5;
+      g.beginPath();
+      g.moveTo(hx, -2);
+      if (style === 'metal' || style === 'engine') {
+        g.lineTo(hx, len);
+        g.stroke();
+        g.beginPath();
+        g.arc(hx, len + 3, 3, 0, Math.PI * 2);
+        g.stroke();
+      } else if (style === 'crystal' || style === 'stone' || style === 'marble') {
+        g.lineTo(hx - 4, -2);
+        g.lineTo(hx, len * 0.8);
+        g.lineTo(hx + 4, -2);
+        g.fill();
+      } else {
+        g.bezierCurveTo(hx + 6, len * 0.4, hx - 6, len * 0.7, hx + (rng.next() - 0.5) * 8, len);
+        g.stroke();
+      }
+    }
+    g.beginPath();
+    g.ellipse(x + 15, -6, 30 + rng.next() * 20, 10, 0, 0, Math.PI * 2);
+    g.fill();
+    x += 140 + rng.next() * 220;
+  }
+  // Soft focus, as if very close to the lens.
+  let out = c;
+  if ('filter' in g) {
+    const t = makeCanvas(c.width, c.height);
+    const tc = t.getContext('2d')!;
+    tc.filter = `blur(${0.8 * s}px)`;
+    tc.drawImage(c, 0, 0);
+    out = t;
+  }
+  fgCache.set(key, out);
+  return out;
 }

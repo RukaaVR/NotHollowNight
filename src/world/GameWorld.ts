@@ -1,4 +1,4 @@
-import { Camera, VIEW_H, VIEW_W } from '../camera/Camera';
+import { BASE_ZOOM, Camera, VIEW_H, VIEW_W } from '../camera/Camera';
 import { clamp, dist } from '../core/math';
 import { events, sfx, type MusicState } from '../core/events';
 import type { InputState } from '../core/input';
@@ -194,7 +194,7 @@ export class GameWorld {
     this.activeBoss = null;
     this.camera.lock = null;
     this.camera.focus = null;
-    this.camera.targetZoom = 1;
+    this.camera.targetZoom = BASE_ZOOM;
     this.combatHeat = 0;
     this.extraDarkness = 0;
     if (this.challengeBoss && def.id !== this.challengeRoom()) this.challengeBoss = null;
@@ -422,7 +422,7 @@ export class GameWorld {
     this.musicState = 'silence';
     sfx('player_die', this.player.cx, this.player.cy);
     this.camera.shake(0.6, 0.3);
-    this.camera.targetZoom = 1.25;
+    this.camera.targetZoom = BASE_ZOOM * 1.25;
     this.fx.shards(this.player.cx, this.player.cy, 24, '#e8e4f0', 220);
     this.fx.burst(this.player.cx, this.player.cy, 30, '#7fd6ff', 160, 1.2, 3);
     this.input.rumble(1, 1, 500);
@@ -460,7 +460,7 @@ export class GameWorld {
     p.poison = 0;
     p.corruption = 0;
     p.gloamed = false;
-    this.camera.targetZoom = 1;
+    this.camera.targetZoom = BASE_ZOOM;
     this.timeScale = 1;
     this.loadRoom(shrineRoom, sx, sy);
     p.vigor = p.maxVigor;

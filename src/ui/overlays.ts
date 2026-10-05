@@ -420,7 +420,7 @@ export class ShopOverlay extends Overlay {
       const sel = i === this.idx;
       const iy = y + 52 + i * 15;
       if (sel) {
-        ctx.fillStyle = 'rgba(232,212,160,0.1)';
+        ctx.fillStyle = 'rgba(236,240,255,0.1)';
         ctx.fillRect(x + 8, iy - 10, w * 0.55, 14);
       }
       if (it.kind === 'relic') {

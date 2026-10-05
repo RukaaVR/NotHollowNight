@@ -4,7 +4,7 @@ import type { GameWorld } from '../world/GameWorld';
 import { T, TILE } from '../world/tiles';
 import { qualityParams, semanticColors, type Settings } from '../accessibility/settings';
 import { TilePainter } from './TilePainter';
-import { backdrop, LAYER_H, LAYER_W } from './Backgrounds';
+import { backdrop, LAYER_H, LAYER_W, foreground, FG_W } from './Backgrounds';
 import { glow, glowSprite, makeCanvas, mix, withAlpha } from './draw';
 import { PK, type Particles } from '../vfx/Particles';
 import { drawProjectile } from '../combat/Projectile';
@@ -50,6 +50,10 @@ export class Renderer {
   private lightCtx: CanvasRenderingContext2D;
   private lightSprite: HTMLCanvasElement;
   private vignette: HTMLCanvasElement | null = null;
+  /** Offscreen layers for the ink-outline pass on characters. */
+  private entCanvas: HTMLCanvasElement | null = null;
+  private inkBox = { x: 0, y: 0, w: 1, h: 1 };
+  private inkCanvas: HTMLCanvasElement | null = null;
   private dynamicRoom = '';
   private dynamicTiles: number[] = [];
   /** Draw-call style counters for the debug overlay. */
@@ -160,16 +164,44 @@ export class Renderer {
     const list: Entity[] = [];
     for (const e of ents) if (e.x + e.w > vx0 && e.x < vx1 && e.y + e.h > vy0 && e.y < vy1) list.push(e);
     list.sort((a, b) => a.layer - b.layer);
+    // Characters are drawn to their own layer and given a bold ink outline,
+    // like hand-inked animation cels. Low quality skips the extra pass.
+    const inked = this.settings.quality !== 'low';
+    const ec = inked ? this.entityLayer() : c;
+    // Screen-space box around everything drawn, so the ink pass touches only those pixels.
+    let bx0 = Infinity;
+    let by0 = Infinity;
+    let bx1 = -Infinity;
+    let by1 = -Infinity;
+    const grow = (x: number, y: number, ww: number, hh: number) => {
+      bx0 = Math.min(bx0, x - 48);
+      by0 = Math.min(by0, y - 48);
+      bx1 = Math.max(bx1, x + ww + 48);
+      by1 = Math.max(by1, y + hh + 48);
+    };
+    if (inked) {
+      for (const e of list) grow(e.x, e.y, e.w, e.h);
+      grow(w.player.x, w.player.y, w.player.w, w.player.h);
+      const sx0 = Math.max(0, Math.floor(this.offX + (bx0 - left) * S));
+      const sy0 = Math.max(0, Math.floor(this.offY + (by0 - top) * S));
+      const sx1 = Math.min(this.canvas.width, Math.ceil(this.offX + (bx1 - left) * S));
+      const sy1 = Math.min(this.canvas.height, Math.ceil(this.offY + (by1 - top) * S));
+      this.inkBox = { x: sx0, y: sy0, w: Math.max(1, sx1 - sx0), h: Math.max(1, sy1 - sy0) };
+      ec.setTransform(1, 0, 0, 1, 0, 0);
+      ec.clearRect(this.inkBox.x, this.inkBox.y, this.inkBox.w, this.inkBox.h);
+      ec.setTransform(S, 0, 0, S, this.offX - left * S, this.offY - top * S);
+    }
     let playerDrawn = false;
     for (const e of list) {
       if (!playerDrawn && e.layer > 50) {
-        drawAeren(c, w.player, time);
+        drawAeren(ec, w.player, time);
         playerDrawn = true;
       }
-      e.draw(c);
+      e.draw(ec);
       this.stats.entities++;
     }
-    if (!playerDrawn) drawAeren(c, w.player, time);
+    if (!playerDrawn) drawAeren(ec, w.player, time);
+    if (inked) this.compositeInked(S, w.palette.tileDark);
     for (const p of w.projectiles) if (p.active) drawProjectile(c, p, time);
     this.drawParticles(w.fx, false);
 
@@ -183,9 +215,50 @@ export class Renderer {
     this.drawParticles(w.fx, true);
     for (const e of list) e.drawGlow?.(c);
 
-    // ---- Post
+    // ---- Foreground silhouettes (not affected by lighting)
     this.screenSpace();
+    if (q.parallaxLayers >= 3) {
+      const fg = foreground(w.regionDef, this.scale);
+      let fx = -((left * 1.3) % FG_W);
+      if (fx > 0) fx -= FG_W;
+      c.globalAlpha = 0.92;
+      for (let x = fx; x < VIEW_W; x += FG_W) c.drawImage(fg, x, 0, FG_W, VIEW_H);
+      c.globalAlpha = 1;
+    }
+    // ---- Post
     this.drawPost(w, time);
+    c.restore();
+  }
+
+  private entityLayer(): CanvasRenderingContext2D {
+    const W = this.canvas.width;
+    const H = this.canvas.height;
+    if (!this.entCanvas || this.entCanvas.width !== W || this.entCanvas.height !== H) {
+      this.entCanvas = makeCanvas(W, H);
+      this.inkCanvas = makeCanvas(W, H);
+    }
+    return this.entCanvas.getContext('2d')!;
+  }
+
+  /** Stamp a dark silhouette of the character layer around itself, then the layer on top. */
+  private compositeInked(S: number, tileDark: string): void {
+    const ent = this.entCanvas!;
+    const ink = this.inkCanvas!;
+    const { x, y, w, h } = this.inkBox;
+    const ic = ink.getContext('2d')!;
+    ic.setTransform(1, 0, 0, 1, 0, 0);
+    ic.clearRect(x, y, w, h);
+    ic.drawImage(ent, x, y, w, h, x, y, w, h);
+    ic.globalCompositeOperation = 'source-in';
+    ic.fillStyle = mix(tileDark, '#000000', 0.6);
+    ic.fillRect(x, y, w, h);
+    ic.globalCompositeOperation = 'source-over';
+    const c = this.ctx;
+    c.save();
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    const o = Math.max(1, Math.round(S * 0.85));
+    for (const [dx, dy] of [[o, 0], [-o, 0], [0, o], [0, -o]]) c.drawImage(ink, x, y, w, h, x + dx, y + dy, w, h);
+    c.drawImage(ent, x, y, w, h, x, y, w, h);
     c.restore();
   }
 
@@ -456,7 +529,7 @@ export class Renderer {
   private drawLighting(w: GameWorld, time: number, left: number, top: number, S: number): void {
     const room = w.room;
     const pal = w.palette;
-    let dark = pal.darkness * 0.64 + (room.dark === 1 ? 0.12 : room.dark === 2 ? 0.32 : 0) + w.extraDarkness;
+    let dark = pal.darkness + (room.dark === 1 ? 0.25 : room.dark === 2 ? 0.55 : 0) + w.extraDarkness;
     if (this.settings.highContrast) dark *= 0.75;
     // Arenas are lit during a fight so every attack stays readable.
     const boss = w.activeBoss;
@@ -469,6 +542,8 @@ export class Renderer {
     const L = LW / (VIEW_W / w.camera.zoom);
     lc.setTransform(1, 0, 0, 1, 0, 0);
     lc.globalCompositeOperation = 'source-over';
+    lc.globalAlpha = 1;
+    lc.clearRect(0, 0, LW, LH);
     lc.fillStyle = withAlpha(mix(pal.sky0, '#000000', 0.6), dark);
     lc.fillRect(0, 0, LW, LH);
     lc.globalCompositeOperation = 'destination-out';

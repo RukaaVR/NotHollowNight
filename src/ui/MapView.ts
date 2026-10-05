@@ -163,7 +163,7 @@ export class MapView {
     ctx.fillStyle = 'rgba(14,12,20,0.95)';
     ctx.fillRect(x, y, w, h);
     // Faint parchment grid
-    ctx.strokeStyle = 'rgba(232,212,160,0.05)';
+    ctx.strokeStyle = 'rgba(236,240,255,0.05)';
     ctx.lineWidth = 0.5;
     for (let gx = 0; gx < this.extentW; gx += 30) {
       const sx = x + w / 2 + (gx - this.panX) * s;
@@ -298,7 +298,7 @@ export class MapView {
     ctx.lineWidth = 0.6;
     ctx.stroke();
     // Crosshair
-    ctx.strokeStyle = 'rgba(232,212,160,0.4)';
+    ctx.strokeStyle = 'rgba(236,240,255,0.4)';
     ctx.beginPath();
     ctx.moveTo(x + w / 2 - 4, y + h / 2);
     ctx.lineTo(x + w / 2 + 4, y + h / 2);

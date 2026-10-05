@@ -11,11 +11,11 @@ import { PK } from '../vfx/Particles';
 import type { HitInfo } from '../world/Entity';
 
 // =====================================================================
-// THE HOLLOW GATEKEEPER — Threshold. A tutorial-friendly giant.
+// THE RUSTED GATEKEEPER — Threshold. A tutorial-friendly giant.
 // =====================================================================
 export class Gatekeeper extends Boss {
   readonly id = 'gatekeeper';
-  bossName = 'THE HOLLOW GATEKEEPER';
+  bossName = 'THE RUSTED GATEKEEPER';
   bossTitle = 'Keeper of the First Door';
   constructor(world: GameWorld, fx: number, fy: number) {
     super(world, fx, fy, 30, 44);

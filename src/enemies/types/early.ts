@@ -11,7 +11,7 @@ import { PK } from '../../vfx/Particles';
 // ---------------------------------------------------------------- Threshold
 
 export const husk: EnemyDef = {
-  id: 'husk', name: 'Hollowed Wanderer', region: 'th', category: 'melee',
+  id: 'husk', name: 'Faded Wanderer', region: 'th', category: 'melee',
   hp: 14, dmg: 1, w: 12, h: 20, frags: 4, sight: 130, weight: 1, stagger: 4, color: '#8a8696', pitch: 0.9,
   role: 'Shambling melee. Lunges after a long wind-up.', weakness: 'Strike after its lunge misses — it needs time to recover.',
   lore: 'Travellers who came down looking for something and forgot what. They still walk, hoping to remember.',

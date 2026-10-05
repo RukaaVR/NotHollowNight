@@ -122,104 +122,154 @@ export class TilePainter {
     const pal = region.palette;
     const d = this.dist[y * g.w + x];
     const r = hash2(x, y, seed);
-    // Core gets darker with depth.
-    const depth = Math.min(d, 4) / 4;
-    const base = mix(alt ? shade(pal.tile, -0.15) : pal.tile, pal.tileDark, depth * 0.85);
-    ctx.fillStyle = base;
+    const ink = mix(pal.tileDark, '#000000', 0.55);
+    const core = mix(pal.tileDark, '#000000', 0.15);
+    // Deep interiors are an almost-black silhouette, like the inked masses of a painting.
+    ctx.fillStyle = d >= 3 ? core : mix(core, pal.tile, d === 2 ? 0.12 : 0.28);
     ctx.fillRect(px, py, TILE, TILE);
-    if (d >= 3) return;
-    // Texture strokes per style
-    ctx.fillStyle = shade(base, 0.08 + r * 0.06);
+    if (d >= 3) {
+      if (r > 0.82) blot(ctx, px, py, r, withAlpha(pal.tile, 0.08));
+      return;
+    }
+    const air = (ox: number, oy: number) => !this.isSolidish(g, x + ox, y + oy);
+    const top = air(0, -1);
+    const bottom = air(0, 1);
+    const left = air(-1, 0);
+    const right = air(1, 0);
+    const face = alt ? shade(pal.tile, -0.12) : pal.tile;
+    // Surface masonry: outlined stones / blocks / planks along every exposed face.
+    // Walkable tops carry the detailed stonework; walls and undersides stay dark
+    // with only occasional stones, so masses read as bold silhouettes.
+    const underTop = !top && y > 0 && !this.isSolidish(g, x, y - 2) && this.isSolidish(g, x, y - 1);
+    if (top || (underTop && r > 0.35) || (d === 1 && r > 0.7)) this.masonry(ctx, px, py, style, face, ink, pal, r, top, top ? 1 : 2);
+    // Ink outline along the boundary with open air
+    ctx.fillStyle = ink;
+    if (top) ctx.fillRect(px, py, TILE, 1.6);
+    if (bottom) ctx.fillRect(px, py + TILE - 1.6, TILE, 1.6);
+    if (left) ctx.fillRect(px, py, 1.6, TILE);
+    if (right) ctx.fillRect(px + TILE - 1.6, py, 1.6, TILE);
+    // Lit ledge: a bright rim just inside the top edge catches the light.
+    if (top) {
+      ctx.fillStyle = withAlpha(pal.tileHi, 0.85);
+      ctx.fillRect(px + (left ? 2 : 0), py + 1.6, TILE - (left ? 2 : 0) - (right ? 2 : 0), 1.1);
+      ctx.fillStyle = withAlpha(pal.tileHi, 0.18);
+      ctx.fillRect(px, py + 2.7, TILE, 2.2);
+    }
+    if (left && !top) {
+      ctx.fillStyle = withAlpha(pal.tileHi, 0.22);
+      ctx.fillRect(px + 1.6, py, 1, TILE);
+    }
+    if (top && left) cornerCut(ctx, px, py, 0);
+    if (top && right) cornerCut(ctx, px + TILE, py, 1);
+    if (bottom && left) cornerCut(ctx, px, py + TILE, 2);
+    if (bottom && right) cornerCut(ctx, px + TILE, py + TILE, 3);
+  }
+
+  /** One tile's worth of surface stones in the region's construction style. */
+  private masonry(ctx: CanvasRenderingContext2D, px: number, py: number, style: TileStyle, face: string, ink: string, pal: RegionDef['palette'], r: number, top: boolean, d: number): void {
+    const dim = d === 2 ? 0.35 : top ? 0 : 0.18;
+    const fill = mix(face, pal.tileDark, dim);
+    const hi = withAlpha(pal.tileHi, top ? 0.4 : 0.18);
+    const stone = (x: number, y: number, w: number, h: number, rad: number) => {
+      ctx.fillStyle = fill;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, rad);
+      ctx.fill();
+      ctx.lineWidth = 0.9;
+      ctx.strokeStyle = ink;
+      ctx.stroke();
+      ctx.strokeStyle = hi;
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(x + rad, y + 0.9);
+      ctx.lineTo(x + w - rad, y + 0.9);
+      ctx.stroke();
+    };
     switch (style) {
       case 'brick':
       case 'marble': {
-        const off = y % 2 === 0 ? 0 : 8;
-        ctx.fillStyle = shade(base, -0.25);
-        ctx.fillRect(px, py + 7, TILE, 1);
-        ctx.fillRect(px + ((off + 4) % 16), py, 1, 7);
-        ctx.fillRect(px + ((off + 12) % 16), py + 8, 1, 8);
+        const off = (Math.floor(py / TILE) % 2) * 6;
+        stone(px - 6 + off, py + 1, 11, 6.5, 1);
+        stone(px + 5 + off, py + 1, 11, 6.5, 1);
+        stone(px - 1, py + 8.5, 9, 6.5, 1);
+        stone(px + 8, py + 8.5, 9, 6.5, 1);
         if (style === 'marble' && r > 0.6) {
-          ctx.strokeStyle = withAlpha(pal.tileHi, 0.15);
+          ctx.strokeStyle = withAlpha(pal.tileHi, 0.2);
+          ctx.lineWidth = 0.6;
           ctx.beginPath();
-          ctx.moveTo(px + r * 16, py);
-          ctx.quadraticCurveTo(px + 8, py + 8, px + (1 - r) * 16, py + 16);
+          ctx.moveTo(px + r * 16, py + 2);
+          ctx.quadraticCurveTo(px + 8, py + 8, px + (1 - r) * 16, py + 14);
           ctx.stroke();
         }
         break;
       }
       case 'metal':
       case 'engine': {
-        ctx.fillStyle = shade(base, -0.2);
-        ctx.fillRect(px, py, TILE, 1);
-        ctx.fillRect(px, py, 1, TILE);
-        ctx.fillStyle = shade(base, 0.2);
-        ctx.fillRect(px + 2, py + 2, 1.5, 1.5);
-        ctx.fillRect(px + 12, py + 12, 1.5, 1.5);
+        stone(px + 0.5, py + 0.5, 15, 15, 1.5);
+        ctx.fillStyle = withAlpha(pal.tileHi, 0.45);
+        for (const [rx, ry] of [[3, 3], [13, 3], [3, 13], [13, 13]]) {
+          ctx.beginPath();
+          ctx.arc(px + rx, py + ry, 0.9, 0, Math.PI * 2);
+          ctx.fill();
+        }
         if (style === 'engine' && r > 0.7) {
-          ctx.strokeStyle = withAlpha(pal.accent, 0.25);
+          ctx.strokeStyle = withAlpha(pal.accent, 0.3);
+          ctx.lineWidth = 0.8;
           ctx.beginPath();
           ctx.arc(px + 8, py + 8, 4, 0, Math.PI * 2);
           ctx.stroke();
         }
         break;
       }
+      case 'wood': {
+        stone(px - 1, py + 0.5, 18, 7, 1.5);
+        stone(px - 1, py + 8.5, 18, 7, 1.5);
+        ctx.strokeStyle = withAlpha(ink, 0.6);
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(px + 2 + r * 6, py + 4);
+        ctx.lineTo(px + 10 + r * 4, py + 4.4);
+        ctx.stroke();
+        break;
+      }
       case 'book': {
+        const cols = ['#6a3a26', '#2e4468', '#56562a', '#4a2a50', '#2e5a4a'];
         for (let i = 0; i < 4; i++) {
-          ctx.fillStyle = shade(['#5a3020', '#2a3a5a', '#4a4a20', '#3a2040'][(i + Math.floor(r * 4)) % 4], -0.2 - depth * 0.4);
-          ctx.fillRect(px + i * 4 + 0.5, py + 1 + (i % 2), 3, 14 - (i % 2));
+          const h = 13 - ((i + Math.floor(r * 5)) % 3);
+          ctx.fillStyle = mix(cols[(i + Math.floor(r * 5)) % 5], pal.tileDark, dim + 0.15);
+          ctx.fillRect(px + i * 4 + 0.4, py + 15 - h, 3.2, h);
+          ctx.strokeStyle = ink;
+          ctx.lineWidth = 0.7;
+          ctx.strokeRect(px + i * 4 + 0.4, py + 15 - h, 3.2, h);
+          ctx.fillStyle = withAlpha(pal.tileHi, 0.35);
+          ctx.fillRect(px + i * 4 + 0.9, py + 17 - h, 2.2, 0.7);
         }
         break;
       }
       case 'crystal': {
-        if (r > 0.75) {
-          ctx.fillStyle = withAlpha(pal.accent, 0.25);
+        stone(px + 0.5, py + 1, 8, 7, 3);
+        stone(px + 7.5, py + 2, 8, 6, 3);
+        stone(px + 2, py + 8.5, 12, 6.5, 3);
+        if (r > 0.7) {
+          ctx.fillStyle = withAlpha(pal.accent, 0.5);
           ctx.beginPath();
-          ctx.moveTo(px + 4, py + 14);
-          ctx.lineTo(px + 8, py + 3);
-          ctx.lineTo(px + 12, py + 14);
+          ctx.moveTo(px + 5, py + 14);
+          ctx.lineTo(px + 8, py + 4);
+          ctx.lineTo(px + 11, py + 14);
           ctx.fill();
         }
-        blot(ctx, px, py, r, shade(base, 0.06));
         break;
       }
-      case 'wood': {
-        ctx.fillStyle = shade(base, -0.18);
-        ctx.fillRect(px, py + 5, TILE, 1);
-        ctx.fillRect(px, py + 11, TILE, 1);
-        if (r > 0.5) ctx.fillRect(px + 7, py, 1, 5);
-        break;
+      default: {
+        // Rounded cobbles of varied size
+        const a = 6 + r * 4;
+        stone(px - 1, py + 0.8, a, 7, 3);
+        stone(px + a - 0.5, py + 0.8, 17 - a, 7, 3);
+        const b = 5 + ((r * 13) % 1) * 5;
+        stone(px + 0.5, py + 8.3, b, 7, 3);
+        stone(px + b + 1, py + 8.3, 15 - b, 7, 3);
       }
-      default:
-        blot(ctx, px, py, r, shade(base, 0.07));
-        if (r < 0.3) blot(ctx, px + 4, py + 6, 1 - r, shade(base, -0.12));
     }
-    // Lit rims on exposed faces
-    const air = (ox: number, oy: number) => !this.isSolidish(g, x + ox, y + oy);
-    const hi = withAlpha(pal.tileHi, 0.55);
-    const lo = withAlpha('#000000', 0.45);
-    if (air(0, -1)) {
-      ctx.fillStyle = hi;
-      ctx.fillRect(px, py, TILE, 1.5);
-      ctx.fillStyle = withAlpha(pal.tileHi, 0.18);
-      ctx.fillRect(px, py + 1.5, TILE, 2);
-    }
-    if (air(-1, 0)) {
-      ctx.fillStyle = withAlpha(pal.tileHi, 0.25);
-      ctx.fillRect(px, py, 1, TILE);
-    }
-    if (air(1, 0)) {
-      ctx.fillStyle = lo;
-      ctx.fillRect(px + TILE - 1, py, 1, TILE);
-    }
-    if (air(0, 1)) {
-      ctx.fillStyle = lo;
-      ctx.fillRect(px, py + TILE - 2, TILE, 2);
-    }
-    // Rounded corners make masses feel carved rather than gridded.
-    if (air(0, -1) && air(-1, 0)) cornerCut(ctx, px, py, 0);
-    if (air(0, -1) && air(1, 0)) cornerCut(ctx, px + TILE, py, 1);
-    if (air(0, 1) && air(-1, 0)) cornerCut(ctx, px, py + TILE, 2);
-    if (air(0, 1) && air(1, 0)) cornerCut(ctx, px + TILE, py + TILE, 3);
   }
 
   private topDecor(ctx: CanvasRenderingContext2D, px: number, py: number, style: TileStyle, pal: RegionDef['palette'], r: number): void {

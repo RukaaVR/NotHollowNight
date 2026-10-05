@@ -191,7 +191,7 @@ export class PauseMenu extends Overlay {
     const tw = VIEW_W / this.tabs.length;
     this.tabs.forEach((t, i) => {
       const sel = i === this.tab;
-      text(ctx, t, tw * i + tw / 2, 16, sel ? 9 : 7.5, sel ? UI.gold : UI.dim, 'center', sel ? 'bold' : 'normal');
+      text(ctx, t.toUpperCase(), tw * i + tw / 2, 16, sel ? 8 : 6.5, sel ? UI.gold : UI.dim, 'center', 'display');
     });
     divider(ctx, VIEW_W / 2, 22, VIEW_W - 40, a);
     text(ctx, 'Q / R: change tab', VIEW_W - 8, VIEW_H - 5, 5.5, UI.faint, 'right');
@@ -226,7 +226,7 @@ export class PauseMenu extends Overlay {
     text(ctx, 'Threads', x + 8, y + 12, 7, UI.dim);
     const used = threadsUsed(p);
     for (let i = 0; i < p.threadSlots; i++) {
-      ctx.fillStyle = i < used ? UI.gold : 'rgba(232,212,160,0.18)';
+      ctx.fillStyle = i < used ? UI.gold : 'rgba(236,240,255,0.18)';
       ctx.beginPath();
       ctx.arc(x + 50 + i * 9, y + 9.5, 3, 0, Math.PI * 2);
       ctx.fill();

@@ -20,7 +20,7 @@ export interface BossInfo {
 }
 
 export const BOSSES: BossInfo[] = [
-  { id: 'gatekeeper', name: 'The Hollow Gatekeeper', title: 'Keeper of the First Door', region: 'th', ctor: Gatekeeper, room: 'th_boss', lore: 'It was posted at the first door with one order: let no one back up. It never asked who would want to.' },
+  { id: 'gatekeeper', name: 'The Rusted Gatekeeper', title: 'Keeper of the First Door', region: 'th', ctor: Gatekeeper, room: 'th_boss', lore: 'It was posted at the first door with one order: let no one back up. It never asked who would want to.' },
   { id: 'weeping_root', name: 'The Weeping Root', title: 'Mother of the Mourning Grove', region: 'mg', ctor: WeepingRoot, room: 'mg_boss', lore: 'The oldest tree of the royal garden, dragged down root by root. It weeps for the sky it was taken from.' },
   { id: 'mycelia', name: 'Mycelia', title: 'Spore Matron of the Warrens', region: 'gs', ctor: Mycelia, room: 'gs_boss', lore: 'She fed the Engine on dreamcaps for three centuries, and grew fat on the dreams that leaked.' },
   { id: 'prism', name: 'The Prism Wyrm', title: 'Light That Swallowed the Miners', region: 'lc', ctor: PrismWyrm, room: 'lc_boss', lore: 'Crystal grows toward sound. The miners stopped singing. The crystal grew toward their hearts instead.' },

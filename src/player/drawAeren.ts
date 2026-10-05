@@ -3,6 +3,7 @@ import { ATTACKS } from './constants';
 import { glow, ellipse, fillCircle } from '../rendering/draw';
 import { TAU, clamp } from '../core/math';
 
+const AEREN_SCALE = 1.14;
 const CLOAK = '#2b2f4a';
 const CLOAK_DARK = '#1c1f33';
 const TRIM = '#c9a96a';
@@ -42,7 +43,8 @@ export function drawAeren(ctx: CanvasRenderingContext2D, p: Player, time: number
   const by = b.y + b.h;
   ctx.save();
   ctx.translate(cx, by);
-  ctx.scale(p.facing * p.squashX, p.squashY);
+  // Drawn slightly larger than the hitbox so the silhouette reads at a glance.
+  ctx.scale(p.facing * p.squashX * AEREN_SCALE, p.squashY * AEREN_SCALE);
 
   if (st === 'dead') {
     drawDead(ctx, p, time);
@@ -153,24 +155,34 @@ export function drawAeren(ctx: CanvasRenderingContext2D, p: Player, time: number
   ctx.fill();
   // Hood opening
   ctx.fillStyle = '#0a0b14';
-  ellipse(ctx, 1.4, hy - 0.4, 3.1, 3.4);
+  ellipse(ctx, 1.5, hy - 0.4, 3.9, 4.1);
   ctx.fill();
-  // Porcelain mask
+  // Porcelain mask: the brightest shape on screen, so Aeren is always found.
   ctx.fillStyle = MASK;
   ctx.beginPath();
-  ctx.moveTo(4, hy - 2.4);
-  ctx.quadraticCurveTo(4.6, hy + 1.6, 1.8, hy + 2.8);
-  ctx.quadraticCurveTo(-0.6, hy + 1.4, -0.2, hy - 1.2);
-  ctx.quadraticCurveTo(1.2, hy - 3.6, 4, hy - 2.4);
+  ctx.moveTo(4.9, hy - 3);
+  ctx.quadraticCurveTo(5.7, hy + 2, 2, hy + 3.7);
+  ctx.quadraticCurveTo(-1.4, hy + 1.8, -0.9, hy - 1.6);
+  ctx.quadraticCurveTo(1, hy - 4.6, 4.9, hy - 3);
+  ctx.fill();
+  ctx.strokeStyle = '#0a0b14';
+  ctx.lineWidth = 0.6;
+  ctx.stroke();
+  // Soft shading on the mask's far side
+  ctx.fillStyle = 'rgba(120,130,170,0.35)';
+  ctx.beginPath();
+  ctx.moveTo(-0.9, hy - 1.6);
+  ctx.quadraticCurveTo(-1.4, hy + 1.8, 2, hy + 3.7);
+  ctx.quadraticCurveTo(0.4, hy + 1, 0.2, hy - 2.6);
   ctx.fill();
   // The line of light across the eye
   const eyeGlow = p.chargeReady ? 1 : p.chargeT > 0 ? 0.6 : 0.35;
   glow(ctx, 2.6, hy - 0.3, 5 + eyeGlow * 4, EYE, eyeGlow);
   ctx.strokeStyle = EYE;
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 1.1;
   ctx.beginPath();
-  ctx.moveTo(2.6, hy - 2.4);
-  ctx.lineTo(2.6, hy + 1.4);
+  ctx.moveTo(2.9, hy - 2.8);
+  ctx.lineTo(2.9, hy + 1.8);
   ctx.stroke();
 
   // ----- Arm + Veilblade

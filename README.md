@@ -37,7 +37,7 @@ or with **Down + R** in game. `?scene=game&room=<id>` jumps straight into a room
 
 | | Count | Notes |
 |---|---|---|
-| Regions | 15 | The Threshold, Lanternwake (hub), Mourning Grove, Gloamspore Warrens, The Drowned City, Lumen Caverns, Ashen Foundry, The Sunken Archive, Thorn Chapel, The Black Reservoir, Starwell Observatory, The Veiled Garden, The Hollow Engine, The Abyss, Hall of Echoes |
+| Regions | 15 | The Threshold, Lanternwake (hub), Mourning Grove, Gloamspore Warrens, The Drowned City, Lumen Caverns, Ashen Foundry, The Sunken Archive, Thorn Chapel, The Black Reservoir, Starwell Observatory, The Veiled Garden, The Silent Engine, The Abyss, Hall of Echoes |
 | Rooms | 93 | Each region has its own palette, tile style, parallax backdrop, weather, ambience and music theme |
 | Enemy types | 35 | Each has its own AI states, telegraphs and hit reactions. Any type can spawn as an elite. |
 | Bosses | 14 | Multi-phase fights with a title card and a phase-ticked health bar. All 14 can be rematched in the Hall of Echoes (normal, *Ascended* or *One Breath*), with best times recorded. |
@@ -65,8 +65,14 @@ or with **Down + R** in game. `?scene=game&room=<id>` jumps straight into a room
 * **Music.** Generative music per region, layered by state: exploration, combat, elite, boss, low health,
   victory, discovery and story. Each boss and each ending has its own theme. The mix includes ambience
   beds, positional SFX synthesis and an underwater low-pass filter.
-* **Rendering.** Chunk-cached tiles, four parallax layers, a lightmap with coloured bloom, weather, a
-  particle pool with per-quality budgets, post effects, and a photo mode with filters and poses.
+* **Rendering.** A luminous, inked painterly style:
+  * Glowing hazy skies with light shafts, and four parallax layers that fade into the haze with distance.
+  * Near-black ground masses with ink-outlined stonework and lit ledges.
+  * A bold ink outline on every character, enemy and boss.
+  * Soft dark foreground silhouettes, and engraved title typography (Cinzel and Cormorant Garamond,
+    both OFL-licensed and bundled locally) with procedural silver filigree.
+  * Also: chunk-cached tiles, a lightmap with coloured bloom, weather, a particle pool with per-quality
+    budgets, post effects, and a photo mode with filters and poses.
 * **Accessibility and assists.** Camera shake 0–100 %, reduced particles and flashes, high contrast,
   three colour-blind palettes, text and HUD scale, full key and pad remapping, five audio buses, and
   vibration. Difficulty presets change aggression, telegraph length and resource gain rather than enemy
@@ -134,8 +140,10 @@ and calls a narrow `WorldUI` interface. This lets the unit tests run the real ga
 These are written to be honest rather than flattering.
 
 * **Performance.** I only measured it in headless Chromium with software rasterisation. There, simulation
-  takes about 0.2 ms per frame. Rendering at 1280×720 takes about 40 ms on High and about 1–2 ms on
-  Low. GPU-accelerated browsers should be far faster, but I have not measured on real hardware.
+  takes about 0.2 ms per frame. Rendering at 1280×720 takes about 55–65 ms on High, 35–40 ms on Medium
+  and about 1.5 ms on Low. The cost is fill rate: each full-screen pass (sky, parallax, ink outlines,
+  lighting, post) costs 5–10 ms there. GPU-accelerated browsers should be far faster, but I have not
+  measured on real hardware.
   *Adaptive Quality* is there as a safety net.
 * **Playtesting.** Nobody has played the game start to finish. Traversal is proven by the automated
   reachability checker and by runtime tests of specific rooms, transitions and fights. Boss and enemy

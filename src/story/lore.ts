@@ -124,7 +124,7 @@ export const LOST_RELICS: Record<string, ItemDef & { value: number }> = {
   lr_2: { name: 'Herald\'s Horn', desc: 'The horn that called the Descent. It will not sound again.', color: '#e0c090', value: 250 },
   lr_3: { name: 'Crown Fragment', desc: 'A point of the Queen\'s crown, snapped off in grief.', color: '#fff0c0', value: 400 },
   lr_4: { name: 'Astrolabe of Ilvane', desc: 'It still tracks the surface sun. The sun is up.', color: '#c8d0ff', value: 450 },
-  lr_5: { name: 'Engine Governor', desc: 'A small device that once kept the Hollow Engine from spinning too fast.', color: '#d0b080', value: 500 },
+  lr_5: { name: 'Engine Governor', desc: 'A small device that once kept the Silent Engine from spinning too fast.', color: '#d0b080', value: 500 },
   lr_6: { name: 'First Lantern', desc: 'The very first lamp carried into the Veil. Its flame is a memory of a flame.', color: '#ffe8a0', value: 800 },
 };
 

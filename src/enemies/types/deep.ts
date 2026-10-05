@@ -136,7 +136,7 @@ export const topiary: EnemyDef = {
   },
 };
 
-// ---------------------------------------------------------------- Hollow Engine
+// ---------------------------------------------------------------- Silent Engine
 
 export const gearwarden: EnemyDef = {
   id: 'gearwarden', name: 'Gearwarden', region: 'he', category: 'armored',
