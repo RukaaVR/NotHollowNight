@@ -456,3 +456,22 @@ describe('settings and Veilfall+', () => {
     expect(n.pickups).toEqual({});
   });
 });
+
+describe('room transitions through real doors', () => {
+  it('walking off the west edge of lw_gate enters lw_square', () => {
+    const { world, input } = makeWorld(allRooms());
+    world.progress.room = 'lw_gate';
+    world.begin('start');
+    step(world, input, 30);
+    // lw_square is to the west of lw_gate on the ground row.
+    const g = world.grid;
+    world.player.body.x = 3 * TILE;
+    world.player.body.y = 15 * TILE - world.player.h - 1;
+    expect(g.isSolidAt(0, 14)).toBe(false);
+    input.hold('left');
+    step(world, input, 120);
+    input.release('left');
+    expect(world.room.id).toBe('lw_square');
+    expect(world.player.state).not.toBe('dead');
+  });
+});

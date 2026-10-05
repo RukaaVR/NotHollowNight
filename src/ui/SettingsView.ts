@@ -69,6 +69,7 @@ export class SettingsView {
       ],
       display: [
         choice('Quality Preset', 'quality', [['low', 'Low'], ['medium', 'Medium'], ['high', 'High'], ['ultra', 'Ultra']], 'Render resolution, lighting detail, parallax layers and particle budget.'),
+        toggle('Adaptive Quality', 'autoQuality', 'Steps the preset down if the frame rate stays below 50 for several seconds.'),
         toggle('Reduced Particles', 'reducedParticles', 'Fewer sparks, dust and weather particles.'),
         slider('Camera Shake', 'shake', 0, 1, 0.05, pct, 'Scales all screen shake, from none to full.'),
         toggle('Show FPS', 'showFps'),

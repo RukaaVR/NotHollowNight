@@ -47,6 +47,7 @@ export class Game {
   private fpsAcc = 0;
   private fpsFrames = 0;
   private qualityKey = '';
+  private slowT = 0;
   /** Exposed for automated tests. */
   steps = 0;
 
@@ -135,9 +136,28 @@ export class Game {
     this.fpsFrames++;
     if (this.fpsAcc >= 0.5) {
       this.fps = Math.round(this.fpsFrames / this.fpsAcc);
+      this.adaptQuality(this.fpsAcc);
       this.fpsAcc = 0;
       this.fpsFrames = 0;
     }
+  }
+
+  /** Step the quality preset down when gameplay runs persistently slow. */
+  private adaptQuality(window: number): void {
+    const s = this.settings;
+    if (!s.autoQuality || this.scene?.id !== 'game' || document.hidden) {
+      this.slowT = 0;
+      return;
+    }
+    this.slowT = this.fps < 50 ? this.slowT + window : 0;
+    if (this.slowT < 4) return;
+    this.slowT = 0;
+    const order = ['low', 'medium', 'high', 'ultra'] as const;
+    const i = order.indexOf(s.quality);
+    if (i <= 0) return;
+    s.quality = order[i - 1];
+    this.applySettings();
+    events.emit('toast', { text: `Quality lowered to ${s.quality}`, sub: 'To keep the game smooth. Adaptive Quality can be turned off in Settings.', kind: 'info' });
   }
 
   /** Deterministic stepping for automated tests (bypasses requestAnimationFrame timing). */

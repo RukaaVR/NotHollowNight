@@ -14,6 +14,8 @@ export interface Settings {
   /** 0..1 multiplier on all camera shake. */
   shake: number;
   quality: Quality;
+  /** Lower the quality preset automatically when the frame rate stays low. */
+  autoQuality: boolean;
   reducedParticles: boolean;
   reduceFlashes: boolean;
   highContrast: boolean;
@@ -47,6 +49,7 @@ export function defaultSettings(): Settings {
     dialogueVolume: 0.7,
     shake: 1,
     quality: 'high',
+    autoQuality: true,
     reducedParticles: false,
     reduceFlashes: false,
     highContrast: false,
