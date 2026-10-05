@@ -5,6 +5,7 @@ import { T, TILE } from '../world/tiles';
 import { qualityParams, semanticColors, type Settings } from '../accessibility/settings';
 import { TilePainter } from './TilePainter';
 import { backdrop, LAYER_H, LAYER_W, foreground, FG_W } from './Backgrounds';
+import { paintedBackdrop } from './PaintedArt';
 import { glow, glowSprite, makeCanvas, mix, withAlpha } from './draw';
 import { PK, type Particles } from '../vfx/Particles';
 import { drawProjectile } from '../combat/Projectile';
@@ -133,17 +134,36 @@ export class Renderer {
     c.clip();
 
     // ---- Backdrop (sky + parallax)
-    const bd = backdrop(w.regionDef, this.scale, q.parallaxLayers);
     this.screenSpace();
-    c.drawImage(bd.sky, 0, 0, VIEW_W, VIEW_H);
-    const ph = w.grid.ph;
-    for (const layer of bd.layers) {
-      const f = layer.factor;
-      const lw = LAYER_W;
-      let sx = -((left * f + time * layer.drift) % lw);
-      if (sx > 0) sx -= lw;
-      const sy = -270 + (ph - 270) * f - top * f;
-      for (let x = sx; x < VIEW_W; x += lw) c.drawImage(layer.canvas, x, sy, lw, LAYER_H);
+    const painted = paintedBackdrop(w.regionDef.id);
+    if (painted) {
+      // Hand-painted region art: overscanned and panned across the room for parallax.
+      const iw = VIEW_W * 1.3;
+      const ih = (iw * painted.height) / painted.width;
+      const px = clamp(left / Math.max(1, w.grid.pw - cam.viewW), 0, 1);
+      const py = clamp(top / Math.max(1, w.grid.ph - cam.viewH), 0, 1);
+      c.imageSmoothingEnabled = true;
+      c.drawImage(painted, -px * (iw - VIEW_W), -py * (ih - VIEW_H), iw, ih);
+      // Pull the painting back slightly so the playfield reads in front of it.
+      const pal = w.palette;
+      const haze = c.createLinearGradient(0, 0, 0, VIEW_H);
+      haze.addColorStop(0, withAlpha(pal.sky0, 0.18));
+      haze.addColorStop(0.6, withAlpha(pal.sky1, 0.12));
+      haze.addColorStop(1, withAlpha(pal.sky0, 0.45));
+      c.fillStyle = haze;
+      c.fillRect(0, 0, VIEW_W, VIEW_H);
+    } else {
+      const bd = backdrop(w.regionDef, this.scale, q.parallaxLayers);
+      c.drawImage(bd.sky, 0, 0, VIEW_W, VIEW_H);
+      const ph = w.grid.ph;
+      for (const layer of bd.layers) {
+        const f = layer.factor;
+        const lw = LAYER_W;
+        let sx = -((left * f + time * layer.drift) % lw);
+        if (sx > 0) sx -= lw;
+        const sy = -270 + (ph - 270) * f - top * f;
+        for (let x = sx; x < VIEW_W; x += lw) c.drawImage(layer.canvas, x, sy, lw, LAYER_H);
+      }
     }
     if (this.settings.highContrast) {
       c.fillStyle = 'rgba(0,0,0,0.45)';

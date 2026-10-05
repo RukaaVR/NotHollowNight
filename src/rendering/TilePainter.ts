@@ -53,19 +53,6 @@ export class TilePainter {
     const pal = region.palette;
     const style = region.style;
     const seed = g.def.id.length * 31 + g.def.pos[0];
-    // Backwall: dark rock behind open space near solid masses (gives caves depth).
-    for (let y = ty0; y < ty1; y++) {
-      for (let x = tx0; x < tx1; x++) {
-        const t = g.tile(x, y);
-        if (t === T.Solid || t === T.SolidAlt || t === T.Hidden) continue;
-        let near = 9;
-        for (let oy = -2; oy <= 2; oy++) for (let ox = -2; ox <= 2; ox++) if (this.isSolidish(g, x + ox, y + oy)) near = Math.min(near, Math.max(Math.abs(ox), Math.abs(oy)));
-        if (near <= 2) {
-          ctx.fillStyle = withAlpha(pal.tileDark, near === 1 ? 0.55 : 0.28);
-          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-        }
-      }
-    }
     for (let y = ty0; y < ty1; y++) {
       for (let x = tx0; x < tx1; x++) {
         const t = g.tile(x, y);

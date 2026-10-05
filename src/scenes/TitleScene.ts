@@ -12,6 +12,7 @@ import { formatTime, clamp } from '../core/math';
 import { Rng } from '../core/rng';
 import { glow, makeCanvas } from '../rendering/draw';
 import { aerenFigure } from '../story/cinematics';
+import { paintedBackdrop, preloadPaintedArt } from '../rendering/PaintedArt';
 import { TOTALS_FOR_SAVES } from './totals';
 import type { Difficulty } from '../accessibility/settings';
 import { GameScene } from './GameScene';
@@ -65,6 +66,7 @@ export class TitleScene implements Scene {
   }
 
   enter(): void {
+    preloadPaintedArt();
     events.emit('musicTheme', { theme: 'title' });
     events.emit('music', { state: 'exploration' });
   }
@@ -290,6 +292,16 @@ export class TitleScene implements Scene {
     };
     drawRange(3, 190, 70, '#1a1f33', 0.6);
     drawRange(5, 214, 50, '#12152a', 1.2);
+    // The painted Threshold, slowly drifting, replaces the sketched skyline once loaded.
+    const art = paintedBackdrop('th');
+    if (art) {
+      const iw = VIEW_W * 1.12;
+      const ih = (iw * art.height) / art.width;
+      const dx = -(Math.sin(time * 0.05) * 0.5 + 0.5) * (iw - VIEW_W);
+      ctx.drawImage(art, dx, (VIEW_H - ih) * 0.6, iw, ih);
+      ctx.fillStyle = 'rgba(6,8,16,0.35)';
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    }
     // Mist band
     const mist = ctx.createLinearGradient(0, 170, 0, 240);
     mist.addColorStop(0, 'rgba(120,130,170,0)');

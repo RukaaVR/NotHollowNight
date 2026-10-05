@@ -1,7 +1,8 @@
 # VEILFALL
 
 An original 2D action metroidvania built with TypeScript, Vite, Canvas 2D and the Web Audio API.
-It uses no external assets. Every sprite, background, tile, sound effect and piece of music is generated
+Each region's backdrop is an original painting generated in Canva for this project (`public/art/bg`).
+Everything else (characters, enemies, tiles, effects, UI, sound effects and music) is generated
 procedurally at runtime.
 
 You play Aeren, a masked wanderer carrying the Veilblade, who descends through **the Veil**: fifteen
@@ -66,7 +67,10 @@ or with **Down + R** in game. `?scene=game&room=<id>` jumps straight into a room
   victory, discovery and story. Each boss and each ending has its own theme. The mix includes ambience
   beds, positional SFX synthesis and an underwater low-pass filter.
 * **Rendering.** A luminous, inked painterly style:
-  * Glowing hazy skies with light shafts, and four parallax layers that fade into the haze with distance.
+  * A hand-painted backdrop per region, panned across each room for parallax. It loads lazily; until
+    it arrives (or if it fails) the procedural sky and parallax layers are drawn instead.
+  * Procedural fallback: glowing hazy skies with light shafts, and four parallax layers that fade into
+    the haze with distance.
   * Near-black ground masses with ink-outlined stonework and lit ledges.
   * A bold ink outline on every character, enemy and boss.
   * Soft dark foreground silhouettes, and engraved title typography (Cinzel and Cormorant Garamond,
@@ -151,8 +155,10 @@ These are written to be honest rather than flattering.
 * **Audio.** Tests check which sound and music events fire, but nobody has listened to the synthesised
   output critically. Gamepad support follows the standard mapping and hasn't been tried on physical
   controllers.
-* **Art.** The art is procedural vector illustration drawn at runtime. It aims for a hand-drawn feel but
-  is not hand-painted.
+* **Art.** The region backdrops are AI-generated paintings (Canva). They are currently 600×338 previews,
+  because this build environment couldn't download Canva's full 1920×1080 exports. Replacing the files in
+  `public/art/bg` with the full-size exports sharpens them; no code changes are needed. Characters,
+  enemies and terrain are still procedural vector art drawn at runtime, not hand-painted.
 * **Screenshot tests.** They capture images and assert on game state; they do not pixel-diff against
   stored baselines.
 * **No Quit option.** The title screen has none, because a browser tab cannot close itself.
