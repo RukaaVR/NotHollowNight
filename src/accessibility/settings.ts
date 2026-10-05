@@ -77,6 +77,7 @@ export function sanitizeSettings(raw: unknown): Settings {
   for (const k of Object.keys(d)) {
     if (k === 'keys' || k === 'pad') continue;
     const v = r[k];
+    if (typeof v === 'number' && !Number.isFinite(v)) continue;
     if (v !== undefined && typeof v === typeof out[k]) out[k] = v;
   }
   for (const group of ['keys', 'pad'] as const) {
@@ -89,6 +90,11 @@ export function sanitizeSettings(raw: unknown): Settings {
       }
     }
   }
+  d.masterVolume = clamp01(d.masterVolume);
+  d.musicVolume = clamp01(d.musicVolume);
+  d.sfxVolume = clamp01(d.sfxVolume);
+  d.ambienceVolume = clamp01(d.ambienceVolume);
+  d.dialogueVolume = clamp01(d.dialogueVolume);
   d.shake = clamp01(d.shake);
   d.textScale = Math.min(1.6, Math.max(0.8, d.textScale));
   d.hudScale = Math.min(1.5, Math.max(0.6, d.hudScale));

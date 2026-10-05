@@ -726,7 +726,7 @@ export class ThornSaint extends Boss {
     super(world, fx, fy, 24, 40);
     this.setup(280);
     this.staggerMax = 16;
-    this.rewards = [{ kind: 'ability', value: 'phase' }];
+    this.rewards = [{ kind: 'ability', value: 'phase' }, { kind: 'heart', value: '' }];
   }
 
   protected chooseMove(): string {
