@@ -3,6 +3,7 @@ import { Rng } from '../core/rng';
 import { TAU, clamp, easeInOutSine } from '../core/math';
 import { glow, fillCircle, ellipse } from '../rendering/draw';
 import { UI, text, paragraph, divider } from '../ui/text';
+import { paintedPanel } from '../rendering/PaintedArt';
 
 /** A single illustrated panel of a cinematic. */
 export interface Panel {
@@ -10,6 +11,8 @@ export interface Panel {
   lines: string[];
   art: (ctx: CanvasRenderingContext2D, t: number, k: number) => void;
   music?: string;
+  /** Painted Canva illustration (public/art/cine/<id>.jpg); `art` is the fallback while it loads. */
+  paint?: string;
 }
 
 const snowRng = new Rng(11);
@@ -364,6 +367,16 @@ export const ENDINGS: Record<string, { title: string; music: string; panels: Pan
   },
 };
 
+// Painted illustrations for every panel, in order.
+OPENING.forEach((p, i) => (p.paint = `op${i + 1}`));
+const ENDING_ART: Record<string, string> = { standard: 'll', true: 'db', secret: 'um' };
+for (const [key, ending] of Object.entries(ENDINGS)) ending.panels.forEach((p, i) => (p.paint = `${ENDING_ART[key]}${i + 1}`));
+
+/** Start loading every painted panel (the title screen calls this). */
+export function preloadCinematics(): void {
+  for (const p of [...OPENING, ...Object.values(ENDINGS).flatMap((e) => e.panels)]) if (p.paint) paintedPanel(p.paint);
+}
+
 export const CREDITS: string[] = [
   'VEILFALL',
   '',
@@ -393,7 +406,9 @@ export class PanelPlayer {
   idx = 0;
   t = 0;
   skipped = false;
-  constructor(readonly panels: Panel[]) {}
+  constructor(readonly panels: Panel[]) {
+    for (const p of panels) if (p.paint) paintedPanel(p.paint);
+  }
 
   get done(): boolean {
     return this.idx >= this.panels.length;
@@ -413,7 +428,25 @@ export class PanelPlayer {
     if (this.done) return;
     const p = this.panels[this.idx];
     const k = clamp(this.t / p.duration, 0, 1);
-    p.art(ctx, time, k);
+    const img = p.paint ? paintedPanel(p.paint) : null;
+    if (img) {
+      // Slow push-in across the painting (a gentle Ken Burns move), alternating direction per panel.
+      const zoom = 1.04 + 0.08 * easeInOutSine(k);
+      const w = VIEW_W * zoom;
+      const h = Math.max(VIEW_H, (w * img.naturalHeight) / img.naturalWidth);
+      const dir = this.idx % 2 === 0 ? 1 : -1;
+      const x = (VIEW_W - w) / 2 + dir * (k - 0.5) * (w - VIEW_W) * 0.8;
+      const y = (VIEW_H - h) / 2 - (k - 0.5) * (h - VIEW_H) * 0.5;
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(img, x, y, w, h);
+      const v = ctx.createRadialGradient(VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.35, VIEW_W / 2, VIEW_H / 2, VIEW_W * 0.62);
+      v.addColorStop(0, 'rgba(0,0,0,0)');
+      v.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = v;
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    } else {
+      p.art(ctx, time, k);
+    }
     // Fade in/out each panel
     const fade = Math.min(1, this.t / 1.2, (p.duration - this.t) / 1.2);
     ctx.fillStyle = `rgba(0,0,0,${1 - clamp(fade, 0, 1)})`;
@@ -426,7 +459,6 @@ export class PanelPlayer {
     ctx.globalAlpha = ta;
     p.lines.forEach((l, i) => paragraph(ctx, l, VIEW_W / 2, VIEW_H - 26 + i * 12 - (p.lines.length - 1) * 6, 8.5, VIEW_W - 60, '#e8e0d0', 1.3, 'center'));
     ctx.globalAlpha = 1;
-    void easeInOutSine;
     void TAU;
   }
 }

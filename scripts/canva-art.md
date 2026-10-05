@@ -103,3 +103,9 @@ calder MAHXI4KcGK8
 juno MAHXI1sk1CU
 fen MAHXIwGiybI
 unit9 MAHXI4Up7lE
+
+## Cinematic panels (pages 26–42) → public/art/cine/<id>.jpg
+Opening: op1 MAHXLEK8ADM · op2 MAHXLO1bT5A · op3 MAHXLDruTFc · op4 MAHXLDaNdR0 · op5 MAHXLK6CDOI · op6 MAHXLCj4aqE
+The Long Lullaby: ll1 MAHXLFQNhD0 · ll2 MAHXLFSauiI · ll3 MAHXLMjgVfo · ll4 MAHXLKQfZ4Y
+Dawnbreak: db1 MAHXLFSdNFk · db2 MAHXLKd4qgQ · db3 MAHXLGIRfdc · db4 MAHXLGL2hgM
+The Unmasked: um1 MAHXLJQmcU8 · um2 MAHXLN79pRo · um3 MAHXLAqcy4k

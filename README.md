@@ -1,8 +1,9 @@
 # VEILFALL
 
 An original 2D action metroidvania built with TypeScript, Vite, Canvas 2D and the Web Audio API.
-Each region's backdrop and every character (Aeren, all 35 enemy types, 14 bosses and 28 NPCs) is an
-original painting generated in Canva for this project (`public/art`). Each character is a single painting;
+Each region's backdrop, every character (Aeren, all 35 enemy types, 14 bosses and 28 NPCs) and all 17
+story-cinematic panels (the opening and the three endings) are original paintings generated in Canva for
+this project (`public/art`). Each character is a single painting;
 its motion (breathing, walk bob, wind-up lean, lunge, squash, hit flash) is applied in code. Tiles, effects,
 UI, sound effects and music are generated procedurally at runtime.
 
@@ -71,6 +72,7 @@ or with **Down + R** in game. `?scene=game&room=<id>` jumps straight into a room
   * Painted characters (`src/rendering/SpriteArt.ts`). Sprites load lazily; until one arrives (or if it
     fails) the original procedural vector drawing of that character is used. Hidden ambushers keep their
     procedural disguise, and the Prism Wyrm keeps its segmented procedural body.
+  * Painted cinematic panels with a slow push-in, falling back to the procedural panel art.
   * A hand-painted backdrop per region, panned across each room for parallax. It loads lazily; until
     it arrives (or if it fails) the procedural sky and parallax layers are drawn instead.
   * Procedural fallback: glowing hazy skies with light shafts, and four parallax layers that fade into
@@ -160,8 +162,8 @@ These are written to be honest rather than flattering.
   output critically. Gamepad support follows the standard mapping and hasn't been tried on physical
   controllers.
 * **Art.** The backdrops and characters are AI-generated paintings (Canva). They come from Canva's page
-  previews because this build environment couldn't download Canva's full-size exports: backdrops are
-  600×338, bosses and Aeren about 500 px, enemies and NPCs about 250 px. Replacing the files in
+  previews because this build environment couldn't download Canva's full-size exports: backdrops and
+  cinematic panels are 600×338, bosses and Aeren about 500 px, enemies and NPCs about 250 px. Replacing the files in
   `public/art` with full-size exports (same names, transparent background) sharpens them; no code changes
   are needed. Each character is one still painting animated by transforms, not frame-by-frame animation,
   so limbs don't move independently. Terrain is still procedural.

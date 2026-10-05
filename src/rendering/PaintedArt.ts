@@ -31,3 +31,18 @@ export function paintedBackdrop(regionId: string): HTMLImageElement | null {
 export function preloadPaintedArt(): void {
   for (const id of PAINTED_REGIONS) paintedBackdrop(id);
 }
+
+const panels = new Map<string, HTMLImageElement | null>();
+
+/** A painted cinematic panel (public/art/cine/<id>.jpg), or null while it loads or if it failed. */
+export function paintedPanel(id: string): HTMLImageElement | null {
+  if (typeof Image === 'undefined') return null;
+  const hit = panels.get(id);
+  if (hit !== undefined) return hit && hit.complete && hit.naturalWidth > 0 ? hit : null;
+  const img = new Image();
+  img.decoding = 'async';
+  img.onerror = () => panels.set(id, null);
+  img.src = `./art/cine/${id}.jpg`;
+  panels.set(id, img);
+  return null;
+}
