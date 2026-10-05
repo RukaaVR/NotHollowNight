@@ -5,6 +5,7 @@ import { UI, text, paragraph, panel, divider, wrap, font } from './text';
 import { VIEW_H, VIEW_W } from '../camera/Camera';
 import { sfx } from '../core/events';
 import { NPC_BY_ID } from '../npc/registry';
+import { drawSprite } from '../rendering/SpriteArt';
 import type { Npc } from '../npc/Npc';
 import { abilityIcon, relicIcon } from './icons';
 import { ABILITY_BY_ID } from '../abilities/abilities';
@@ -101,11 +102,17 @@ export class DialogueOverlay extends Overlay {
       ctx.beginPath();
       ctx.rect(px, py, 50, 50);
       ctx.clip();
-      ctx.translate(px + 25, py + 46);
-      const sc = 34 / Math.max(this.fakeNpc.def.h, 14);
-      ctx.scale(sc * 1.2, sc * 1.2);
-      glow(ctx, 0, -this.fakeNpc.def.h / 2, 20, '#ffe8b0', 0.2);
-      this.fakeNpc.def.draw(ctx, this.fakeNpc);
+      glow(ctx, px + 25, py + 22, 30, '#ffe8b0', 0.2);
+      // Head and shoulders of the Canva painting, facing the text; the vector drawing otherwise.
+      const id = this.fakeNpc.def.id;
+      const small = this.fakeNpc.def.h < 14;
+      if (!drawSprite(ctx, 'npc', id, { x: px + 25, y: small ? py + 25 : py + 92, centered: small, height: small ? 40 : 96, facing: 1 })) {
+        ctx.translate(px + 25, py + 46);
+        const sc = 34 / Math.max(this.fakeNpc.def.h, 14);
+        ctx.scale(sc * 1.2, sc * 1.2);
+        glow(ctx, 0, -this.fakeNpc.def.h / 2, 20, '#ffe8b0', 0.2);
+        this.fakeNpc.def.draw(ctx, this.fakeNpc);
+      }
       ctx.restore();
       tx = px + 60;
     }

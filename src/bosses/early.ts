@@ -350,6 +350,11 @@ export class WeepingRoot extends Boss {
     if (n === 2) this.world.ui.hint('The Root weeps harder. Its branches sweep high and low.');
   }
 
+  protected paintPlacement() {
+    // The painted tree stands on the floor and towers over the hitbox, like its roots do.
+    return { x: this.cx, y: this.floorY, height: this.floorY - this.y + 16, maxWidth: 140 };
+  }
+
   protected drawBoss(ctx: CanvasRenderingContext2D): void {
     const cx = this.cx;
     const fy = this.y;
@@ -589,6 +594,10 @@ export class Mycelia extends Boss {
     }
     this.physics(dt);
     this.tickFog(dt);
+  }
+
+  protected paintPlacement() {
+    return { x: this.cx, y: this.y + this.h, height: this.h * 1.45 };
   }
 
   protected drawBoss(ctx: CanvasRenderingContext2D): void {
@@ -855,6 +864,11 @@ export class PrismWyrm extends Boss {
 
   protected drawsCorpse(): boolean {
     return false;
+  }
+
+  /** The wyrm is a chain of segments, so it keeps its procedural body. */
+  protected paintPlacement(): null {
+    return null;
   }
 
   protected drawBoss(ctx: CanvasRenderingContext2D): void {

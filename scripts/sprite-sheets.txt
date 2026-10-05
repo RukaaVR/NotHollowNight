@@ -1,0 +1,31 @@
+player player 1791198722422-zr0w80
+boss gatekeeper 1791199930249-d5rih2
+boss weeping_root 1791199951863-fkootb
+boss mycelia 1791199957574-52y4ce
+boss prism 1791199964084-i9zc1k
+boss bell_warden 1791199969472-b4wdit
+boss ash_warden 1791199973912-5l0325
+boss archivist 1791199978169-ny7q5h
+boss thorn_saint 1791199993222-lumla2
+boss ormund 1791199997276-0pf9xs
+boss astronomer 1791200001363-7p1o1c
+boss crown 1791200008640-0cg0k1
+boss conductor 1791200012652-blx1fr
+boss gloam 1791200017128-y80x6r
+boss first_wanderer 1791200020862-ah6ob5
+grid enemy 1791200047709-07ivb2 husk moth rootling thornback
+grid enemy 1791200051745-rg75a3 shade bark_knight puffcap dropper
+grid enemy 1791200056469-y2csa4 capling bloatcap prism_mite wisp
+grid enemy 1791200061746-obg7z0 geode sentry imp eel
+grid enemy 1791200066026-ni5g36 hound drone brute spitter
+grid enemy 1791200084904-vjd4pi ink_wraith page_swarm scribe acolyte
+grid enemy 1791230626784-eqdas9 wretch lurker coralback sentinel
+grid enemy 1791230631773-ou36br orrery_knight maiden topiary gearwarden
+grid enemy 1791230736455-1o0rm0 arc_node maw dream_eater
+grid npc 1791230817267-9o4y19 old_wick marrow tamsin rhoswen
+grid npc 1791230838353-npubli quenna corvane kettle oriel
+grid npc 1791230849721-6eno5d ossian pell dorran ilka
+grid npc 1791230855366-0pkep2 castor hush seraphel_echo hollis
+grid npc 1791230869639-6v4vw7 mourner ysolde flicker ambrose
+grid npc 1791230880618-x9uust ottoline gristle leaflet maudlin
+grid npc 1791230904164-f0obmq calder juno fen unit9

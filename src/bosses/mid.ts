@@ -1,4 +1,5 @@
 import { Boss } from './Boss';
+import { drawSprite } from '../rendering/SpriteArt';
 import type { GameWorld } from '../world/GameWorld';
 import type { Rect } from '../core/math';
 import { TAU, clamp, sign, dist } from '../core/math';
@@ -646,6 +647,8 @@ export class InkArchivist extends Boss {
   }
 
   drawFigure(ctx: CanvasRenderingContext2D, x: number, by: number, t: number, real: boolean): void {
+    // Ink clones wear the same painting as the real Archivist so they still deceive.
+    if (!real && drawSprite(ctx, 'boss', 'archivist', { x, y: by, height: this.h * 1.3, facing: this.facing, rotate: Math.sin(t * 3) * 0.04 })) return;
     ctx.save();
     ctx.translate(x, by);
     ctx.scale(this.facing, 1);

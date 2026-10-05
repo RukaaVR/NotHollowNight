@@ -4,6 +4,7 @@ import type { DialogueScript } from '../dialogue/types';
 import type { Progress } from '../progression/Progress';
 import { sfx } from '../core/events';
 import { glow } from '../rendering/draw';
+import { drawSprite } from '../rendering/SpriteArt';
 
 export interface NpcDef {
   id: string;
@@ -58,11 +59,27 @@ export class Npc extends Entity {
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
-    ctx.save();
-    ctx.translate(this.cx, this.bottom);
-    ctx.scale(this.facing, 1);
-    this.def.draw(ctx, this);
-    ctx.restore();
+    const floats = this.def.id === 'flicker';
+    const breathe = Math.sin(this.t * 1.9);
+    const nod = this.talkT > 0 ? Math.sin(this.talkT * 18) * 0.05 * (this.talkT / 0.6) : 0;
+    const painted = drawSprite(ctx, 'npc', this.def.id, {
+      x: this.cx,
+      y: floats ? this.cy : this.bottom,
+      centered: floats,
+      height: floats ? 16 : this.h * 1.3,
+      facing: this.facing,
+      lift: floats ? Math.sin(this.t * 2.6) * 2 : 0,
+      rotate: nod + (floats ? Math.sin(this.t * 1.3) * 0.08 : 0),
+      scaleX: 1 + breathe * 0.008,
+      scaleY: 1 - breathe * 0.016,
+    });
+    if (!painted) {
+      ctx.save();
+      ctx.translate(this.cx, this.bottom);
+      ctx.scale(this.facing, 1);
+      this.def.draw(ctx, this);
+      ctx.restore();
+    }
     const p = this.world.player;
     if (Math.hypot(p.cx - this.cx, p.cy - this.cy) < this.interactRange && p.onGround) {
       glow(ctx, this.cx, this.y - 6, 6, '#ffe8b0', 0.6 + 0.2 * Math.sin(this.t * 4));

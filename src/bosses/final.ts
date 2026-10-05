@@ -1,4 +1,5 @@
 import { Boss } from './Boss';
+import { drawSprite } from '../rendering/SpriteArt';
 import type { GameWorld } from '../world/GameWorld';
 import type { Rect } from '../core/math';
 import { TAU, clamp, dist, sign } from '../core/math';
@@ -251,6 +252,10 @@ export class Gloam extends Boss {
 
   protected drawsCorpse(): boolean {
     return false;
+  }
+
+  protected paintPlacement() {
+    return { x: this.cx, y: this.cy, centered: true, height: 78 };
   }
 
   protected drawBoss(ctx: CanvasRenderingContext2D): void {
@@ -579,6 +584,8 @@ export class FirstWanderer extends Boss {
 
 /** Shared silhouette for the First Wanderer and its afterimages. */
 function drawWanderer(ctx: CanvasRenderingContext2D, x: number, by: number, facing: number, t: number, move: string, phase: number, tele: number, alpha: number): void {
+  // Afterimages use the painting too, leaning into the strike they echo.
+  if (drawSprite(ctx, 'boss', 'first_wanderer', { x, y: by, height: 31, facing, alpha, rotate: phase === 2 ? 0.12 : -0.1 * tele, push: phase === 2 ? 3 : 0 })) return;
   ctx.save();
   ctx.translate(x, by);
   ctx.scale(facing, 1);

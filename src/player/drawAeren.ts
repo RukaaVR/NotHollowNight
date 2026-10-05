@@ -2,6 +2,7 @@ import type { Player } from './Player';
 import { ATTACKS } from './constants';
 import { glow, ellipse, fillCircle } from '../rendering/draw';
 import { TAU, clamp } from '../core/math';
+import { drawSprite } from '../rendering/SpriteArt';
 
 const AEREN_SCALE = 1.14;
 const CLOAK = '#2b2f4a';
@@ -36,11 +37,18 @@ export function drawAeren(ctx: CanvasRenderingContext2D, p: Player, time: number
     ctx.globalAlpha = 0.25;
   }
 
+  const cx = b.x + b.w / 2;
+  const by = b.y + b.h;
+  // The Canva painting of Aeren, when it has loaded (it carries its own scarf and blade).
+  if (drawPaintedAeren(ctx, p, time, cx, by)) {
+    if (st !== 'dead') drawEffects(ctx, p, time, cx, by, true);
+    ctx.globalAlpha = 1;
+    return;
+  }
+
   // Scarf (world space verlet)
   drawScarf(ctx, p);
 
-  const cx = b.x + b.w / 2;
-  const by = b.y + b.h;
   ctx.save();
   ctx.translate(cx, by);
   // Drawn slightly larger than the hitbox so the silhouette reads at a glance.
@@ -189,7 +197,13 @@ export function drawAeren(ctx: CanvasRenderingContext2D, p: Player, time: number
   drawBlade(ctx, p, t, hy);
 
   ctx.restore();
+  drawEffects(ctx, p, time, cx, by, false);
+}
 
+/** Slash arcs, shield, mend and charge glows, and the hurt flash: shared by both renditions. */
+function drawEffects(ctx: CanvasRenderingContext2D, p: Player, time: number, cx: number, by: number, painted: boolean): void {
+  const b = p.body;
+  const st = p.state;
   // Slash arcs (world space, after body)
   drawSlash(ctx, p);
 
@@ -204,7 +218,9 @@ export function drawAeren(ctx: CanvasRenderingContext2D, p: Player, time: number
   // Mend glow
   if (st === 'mend') glow(ctx, cx, b.y + b.h / 2, 18 + p.mendT * 10, '#9fe8ff', 0.4 + p.mendT);
   if (p.chargeT > 0.05) glow(ctx, cx + p.facing * 6, b.y + 8, 10 + Math.min(1, p.chargeT) * 10, p.chargeReady ? '#ffffff' : '#c8b8ff', p.chargeReady ? 0.9 : 0.4);
-  if (p.flashT > 0) {
+  if (p.flashT > 0 && painted) {
+    drawSprite(ctx, 'player', 'player', { ...paintedPose(p, time, cx, by), flashOnly: true, alpha: Math.min(1, p.flashT * 2.5) });
+  } else if (p.flashT > 0) {
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = p.flashT * 2.5;
@@ -214,6 +230,67 @@ export function drawAeren(ctx: CanvasRenderingContext2D, p: Player, time: number
     ctx.restore();
   }
   ctx.globalAlpha = 1;
+}
+
+/** Drawn height of the painted Aeren, in world units (the hooded figure with its blade). */
+const PAINTED_H = 30;
+
+/** Procedural motion for the single painting: breathing, run bob, leans, wind-ups and swings. */
+function paintedPose(p: Player, time: number, cx: number, by: number) {
+  const b = p.body;
+  const st = p.state;
+  const running = b.onGround && Math.abs(b.vx) > 15 && st === 'normal';
+  const air = !b.onGround && st !== 'swim' && st !== 'ledge' && st !== 'wall' && st !== 'climb';
+  const breathe = Math.sin(time * 2.4);
+  let rotate = 0;
+  let lift = 0;
+  let push = 0;
+  let sx = p.squashX * (1 + breathe * 0.01);
+  let sy = p.squashY * (1 - breathe * 0.018);
+  let alpha = 1;
+  if (running) {
+    lift = Math.abs(Math.sin(p.runPhase)) * 1.4;
+    rotate = 0.06 + Math.sin(p.runPhase) * 0.03;
+  }
+  if (air) rotate = clamp(b.vy / 900, -0.15, 0.25) * -0.5;
+  if (p.gliding) {
+    rotate = 0.1;
+    sx *= 1.06;
+  }
+  if (st === 'dash') {
+    rotate = 0.22;
+    sx *= 1.12;
+    sy *= 0.92;
+  }
+  if (st === 'swim') rotate = 0.25;
+  if (st === 'mend' || st === 'rest' || st === 'kneel') {
+    sy *= 0.86;
+    sx *= 1.05;
+  }
+  const k = p.atkKind;
+  if (k) {
+    const spec = ATTACKS[k];
+    const windup = p.atkT < spec.startup;
+    if (k === 'up') rotate += windup ? 0.08 : -0.25;
+    else if (k === 'down') rotate += windup ? -0.1 : 0.35;
+    else {
+      rotate += windup ? -0.12 : 0.15;
+      push += windup ? -1 : k === 'charged' ? 3 : 1.5;
+    }
+  } else if (p.chargeT > 0.05) {
+    rotate -= 0.1;
+    push += Math.sin(time * 60) * (p.chargeReady ? 0.3 : 0.15);
+  }
+  if (st === 'dead') {
+    const d = Math.min(1, p.deathT / 1.2);
+    rotate -= d * 1.2;
+    alpha = 1 - d * 0.8;
+  }
+  return { x: cx, y: by, height: PAINTED_H, facing: p.facing, rotate, lift, push, scaleX: sx, scaleY: sy, alpha };
+}
+
+function drawPaintedAeren(ctx: CanvasRenderingContext2D, p: Player, time: number, cx: number, by: number): boolean {
+  return drawSprite(ctx, 'player', 'player', paintedPose(p, time, cx, by));
 }
 
 function drawBlade(ctx: CanvasRenderingContext2D, p: Player, _t: number, hy: number): void {

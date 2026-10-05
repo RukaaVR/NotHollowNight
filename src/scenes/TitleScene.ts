@@ -13,6 +13,7 @@ import { Rng } from '../core/rng';
 import { glow, makeCanvas } from '../rendering/draw';
 import { aerenFigure } from '../story/cinematics';
 import { paintedBackdrop, preloadPaintedArt } from '../rendering/PaintedArt';
+import { preloadSprites } from '../rendering/SpriteArt';
 import { TOTALS_FOR_SAVES } from './totals';
 import type { Difficulty } from '../accessibility/settings';
 import { GameScene } from './GameScene';
@@ -67,6 +68,7 @@ export class TitleScene implements Scene {
 
   enter(): void {
     preloadPaintedArt();
+    preloadSprites();
     events.emit('musicTheme', { theme: 'title' });
     events.emit('music', { state: 'exploration' });
   }

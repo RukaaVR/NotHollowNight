@@ -6,6 +6,7 @@ import { events, sfx } from '../core/events';
 import { fxRng } from '../core/rng';
 import { hurtPlayerRect } from '../combat/combat';
 import { glow } from '../rendering/draw';
+import { drawSprite, type SpritePose } from '../rendering/SpriteArt';
 import { semanticColors } from '../accessibility/settings';
 import { Pickup } from '../world/objects/pickups';
 import { TILE } from '../world/tiles';
@@ -399,14 +400,60 @@ export abstract class Boss extends Entity implements BossLike {
     if (this.staggered) glow(ctx, this.cx, this.cy, Math.max(this.w, this.h), '#ffffff', 0.25 + 0.1 * Math.sin(this.t * 10));
     const dyingShake = this.bstate === 'dying' ? (fxRng.next() - 0.5) * 3 : 0;
     ctx.translate(dyingShake, 0);
-    this.drawBoss(ctx);
-    if (this.flashT > 0) {
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.globalAlpha = (this.flashT / 0.1) * 0.6;
+    if (!this.paint(ctx)) {
       this.drawBoss(ctx);
+      if (this.flashT > 0) {
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = (this.flashT / 0.1) * 0.6;
+        this.drawBoss(ctx);
+      }
     }
     ctx.restore();
     this.drawEffects?.(ctx);
+  }
+
+  /**
+   * Where the Canva-painted sprite goes: anchor, height and so on. Null keeps the
+   * procedural drawing (bosses whose bodies are segmented or split up).
+   */
+  protected paintPlacement(): Pick<SpritePose, 'x' | 'y' | 'height'> & Partial<SpritePose> | null {
+    return { x: this.cx, y: this.y + this.h, height: this.h * 1.3 };
+  }
+
+  /** The procedural motion layered onto the single painting. */
+  protected paintMotion(): Partial<SpritePose> {
+    const t = this.t;
+    let rotate = 0;
+    let push = 0;
+    let sx = 1 + Math.sin(t * 1.8) * 0.01;
+    let sy = 1 - Math.sin(t * 1.8) * 0.018;
+    if (this.movePhase === 1 && this.telegraph > 0) {
+      const k = this.telegraph;
+      rotate -= 0.1 * k;
+      push -= 3 * k;
+      sx *= 1 + 0.05 * k;
+      sy *= 1 - 0.06 * k;
+    } else if (this.movePhase === 2) {
+      rotate += 0.08;
+      push += 4;
+      sx *= 1.05;
+      sy *= 0.97;
+    }
+    if (this.staggered) rotate += Math.sin(t * 14) * 0.05 - 0.1;
+    if (this.flashT > 0) push -= (this.flashT / 0.1) * 2;
+    if (this.bstate === 'dying') rotate += Math.sin(t * 30) * 0.03;
+    if (this.bstate === 'dead') {
+      rotate -= 0.35;
+      sy *= 0.8;
+    }
+    return { rotate, push, scaleX: sx, scaleY: sy, flash: this.flashT > 0 ? (this.flashT / 0.1) * 0.8 : 0, facing: this.facing };
+  }
+
+  /** Draws the painted sprite. False when it is unavailable or this boss opts out. */
+  protected paint(ctx: CanvasRenderingContext2D): boolean {
+    const place = this.paintPlacement();
+    if (!place) return false;
+    return drawSprite(ctx, 'boss', this.id, { facing: this.facing, ...this.paintMotion(), ...place });
   }
 
   // ---- hooks -------------------------------------------------------

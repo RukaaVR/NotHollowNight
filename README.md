@@ -1,9 +1,10 @@
 # VEILFALL
 
 An original 2D action metroidvania built with TypeScript, Vite, Canvas 2D and the Web Audio API.
-Each region's backdrop is an original painting generated in Canva for this project (`public/art/bg`).
-Everything else (characters, enemies, tiles, effects, UI, sound effects and music) is generated
-procedurally at runtime.
+Each region's backdrop and every character (Aeren, all 35 enemy types, 14 bosses and 28 NPCs) is an
+original painting generated in Canva for this project (`public/art`). Each character is a single painting;
+its motion (breathing, walk bob, wind-up lean, lunge, squash, hit flash) is applied in code. Tiles, effects,
+UI, sound effects and music are generated procedurally at runtime.
 
 You play Aeren, a masked wanderer carrying the Veilblade, who descends through **the Veil**: fifteen
 regions of a buried kingdom whose sun went dark.
@@ -67,6 +68,9 @@ or with **Down + R** in game. `?scene=game&room=<id>` jumps straight into a room
   victory, discovery and story. Each boss and each ending has its own theme. The mix includes ambience
   beds, positional SFX synthesis and an underwater low-pass filter.
 * **Rendering.** A luminous, inked painterly style:
+  * Painted characters (`src/rendering/SpriteArt.ts`). Sprites load lazily; until one arrives (or if it
+    fails) the original procedural vector drawing of that character is used. Hidden ambushers keep their
+    procedural disguise, and the Prism Wyrm keeps its segmented procedural body.
   * A hand-painted backdrop per region, panned across each room for parallax. It loads lazily; until
     it arrives (or if it fails) the procedural sky and parallax layers are drawn instead.
   * Procedural fallback: glowing hazy skies with light shafts, and four parallax layers that fade into
@@ -155,10 +159,12 @@ These are written to be honest rather than flattering.
 * **Audio.** Tests check which sound and music events fire, but nobody has listened to the synthesised
   output critically. Gamepad support follows the standard mapping and hasn't been tried on physical
   controllers.
-* **Art.** The region backdrops are AI-generated paintings (Canva). They are currently 600×338 previews,
-  because this build environment couldn't download Canva's full 1920×1080 exports. Replacing the files in
-  `public/art/bg` with the full-size exports sharpens them; no code changes are needed. Characters,
-  enemies and terrain are still procedural vector art drawn at runtime, not hand-painted.
+* **Art.** The backdrops and characters are AI-generated paintings (Canva). They come from Canva's page
+  previews because this build environment couldn't download Canva's full-size exports: backdrops are
+  600×338, bosses and Aeren about 500 px, enemies and NPCs about 250 px. Replacing the files in
+  `public/art` with full-size exports (same names, transparent background) sharpens them; no code changes
+  are needed. Each character is one still painting animated by transforms, not frame-by-frame animation,
+  so limbs don't move independently. Terrain is still procedural.
 * **Screenshot tests.** They capture images and assert on game state; they do not pixel-diff against
   stored baselines.
 * **No Quit option.** The title screen has none, because a browser tab cannot close itself.

@@ -7,6 +7,7 @@ import { sfx } from '../core/events';
 import { fxRng } from '../core/rng';
 import { hurtPlayerRect } from '../combat/combat';
 import { glow } from '../rendering/draw';
+import { drawSprite } from '../rendering/SpriteArt';
 import { semanticColors } from '../accessibility/settings';
 import { PK } from '../vfx/Particles';
 import { setFlag } from '../progression/Progress';
@@ -408,8 +409,10 @@ export class Enemy extends Entity {
       glow(ctx, this.cx, this.cy, (this.w + 18) * boost, c.dangerGlow, (0.3 + this.telegraph * 0.6) * boost);
     }
     if (this.elite) glow(ctx, this.cx, this.cy, this.w + 10, semanticColors(this.world.settings).elite, 0.25);
-    this.def.draw(ctx, this);
-    if (this.flashT > 0) {
+    // Hidden ambushers keep their procedural disguise (buried, submerged, posing as scenery).
+    const painted = !this.hidden && this.drawPainted(ctx);
+    if (!painted) this.def.draw(ctx, this);
+    if (this.flashT > 0 && !painted) {
       // White hit flash: redraw silhouette with additive tint
       ctx.globalCompositeOperation = 'lighter';
       ctx.globalAlpha = fade * (this.flashT / 0.12) * 0.7;
@@ -434,7 +437,73 @@ export class Enemy extends Entity {
       }
     }
   }
+
+  /** Draws the Canva-painted sprite with procedural motion. False if the art is not loaded. */
+  private drawPainted(ctx: CanvasRenderingContext2D): boolean {
+    const id = this.def.id;
+    const flying = !!this.def.flying;
+    const height = PAINTED_HEIGHT[id] ?? Math.round(this.h * 1.35);
+    const t = this.t;
+    const moving = !flying && this.body.onGround && Math.abs(this.body.vx) > 6;
+    const step = this.t * (4 + Math.abs(this.body.vx) * 0.08);
+    let rotate = 0;
+    let push = 0;
+    let lift = moving ? Math.abs(Math.sin(step)) * 1.2 : 0;
+    let sx = 1 + Math.sin(t * 2.2) * 0.012;
+    let sy = 1 - Math.sin(t * 2.2) * 0.02;
+    if (flying) {
+      lift += Math.sin(t * 3.1) * 1.6;
+      rotate += clamp(this.body.vx / 400, -0.18, 0.18) * this.facing;
+    } else if (moving) {
+      rotate += Math.sin(step) * 0.04;
+    }
+    if (this.atkPhase === 1) {
+      // Wind-up: rear back and gather
+      const k = this.telegraph;
+      rotate -= 0.14 * k;
+      push -= 1.5 * k;
+      sx *= 1 + 0.06 * k;
+      sy *= 1 - 0.08 * k;
+      if (this.def.category === 'explosive') {
+        sx *= 1 + 0.25 * k;
+        sy *= 1 + 0.2 * k;
+      }
+    } else if (this.atkPhase === 2) {
+      rotate += 0.16;
+      push += 2.5;
+      sx *= 1.08;
+      sy *= 0.95;
+    }
+    if (this.staggered) rotate += Math.sin(t * 18) * 0.08 - 0.12;
+    if (this.flashT > 0) push -= (this.flashT / 0.12) * 2;
+    if (this.deathT >= 0) {
+      const k = Math.min(1, this.deathT / 0.55);
+      rotate -= k * 0.5;
+      sy *= 1 - k * 0.35;
+    }
+    return drawSprite(ctx, 'enemy', id, {
+      x: this.cx,
+      y: flying ? this.cy : this.bottom,
+      centered: flying,
+      height,
+      maxWidth: Math.max(this.w * 3.2, height * 1.6),
+      facing: this.facing,
+      rotate,
+      push,
+      lift,
+      scaleX: sx,
+      scaleY: sy,
+      flash: this.flashT > 0 ? (this.flashT / 0.12) * 0.85 : 0,
+    });
+  }
 }
+
+/** Drawn height (world units) of each painted enemy; others use their hitbox height × 1.35. */
+const PAINTED_HEIGHT: Record<string, number> = {
+  moth: 15, rootling: 15, thornback: 17, puffcap: 18, dropper: 16, capling: 12, bloatcap: 20, prism_mite: 13,
+  wisp: 18, geode: 30, imp: 17, eel: 20, hound: 17, drone: 17, brute: 32, spitter: 19, page_swarm: 24,
+  lurker: 17, coralback: 18, sentinel: 22, topiary: 22, gearwarden: 24, arc_node: 24, maw: 22, shade: 26,
+};
 
 function approach(v: number, target: number, delta: number): number {
   if (v < target) return Math.min(v + delta, target);

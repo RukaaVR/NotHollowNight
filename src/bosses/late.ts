@@ -1,4 +1,5 @@
 import { Boss } from './Boss';
+import { drawSprite } from '../rendering/SpriteArt';
 import type { GameWorld } from '../world/GameWorld';
 import type { Rect } from '../core/math';
 import { TAU, clamp, dist } from '../core/math';
@@ -175,6 +176,18 @@ export class Ormund extends Boss {
 
   protected drawsCorpse(): boolean {
     return false;
+  }
+
+  protected paint(ctx: CanvasRenderingContext2D): boolean {
+    if (this.out <= 0.02 && this.bstate !== 'dying') return true;
+    // Clip to above the water surface so the body seems to emerge
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, this.world.grid.pw, this.waterY + 2);
+    ctx.clip();
+    const ok = drawSprite(ctx, 'boss', 'ormund', { facing: this.facing, ...this.paintMotion(), x: this.hx, y: this.waterY + 20, height: Math.max(76, this.waterY + 50 - this.hy) });
+    ctx.restore();
+    return ok;
   }
 
   protected drawBoss(ctx: CanvasRenderingContext2D): void {
@@ -639,6 +652,11 @@ export class GrievingCrown extends Boss {
       return;
     }
     super.dying(dt);
+  }
+
+  protected paintPlacement() {
+    const fading = this.spared && this.bstate !== 'fight';
+    return { x: this.cx, y: this.y + this.h, height: this.h * 1.3, alpha: fading ? Math.max(0, 1 - this.stateT / 3) : 1 };
   }
 
   protected drawBoss(ctx: CanvasRenderingContext2D): void {
