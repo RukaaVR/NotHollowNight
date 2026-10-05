@@ -26,6 +26,7 @@ export class HUD {
   private shownVigor = -1;
   private hurtFlash = 0;
   private bossShown = 0;
+  private lastDraw = 0;
 
   toast(text: string, sub?: string, kind = 'info'): void {
     // Room names replace each other instead of piling up.
@@ -190,8 +191,10 @@ export class HUD {
 
     // ---- Boss bar
     const boss = w.activeBoss;
-    if (boss && boss.bossActive && boss.hp > 0) this.bossShown = Math.min(1, this.bossShown + 0.05);
-    else this.bossShown = Math.max(0, this.bossShown - 0.05);
+    const fdt = clamp(time - this.lastDraw, 0, 0.5);
+    this.lastDraw = time;
+    if (boss && boss.bossActive && boss.hp > 0) this.bossShown = Math.min(1, this.bossShown + fdt * 3);
+    else this.bossShown = Math.max(0, this.bossShown - fdt * 3);
     if (boss && this.bossShown > 0) {
       ctx.globalAlpha = this.bossShown;
       const bw = 200;

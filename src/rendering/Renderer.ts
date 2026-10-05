@@ -458,6 +458,9 @@ export class Renderer {
     const pal = w.palette;
     let dark = pal.darkness * 0.64 + (room.dark === 1 ? 0.12 : room.dark === 2 ? 0.32 : 0) + w.extraDarkness;
     if (this.settings.highContrast) dark *= 0.75;
+    // Arenas are lit during a fight so every attack stays readable.
+    const boss = w.activeBoss;
+    if (boss?.bossActive) dark *= 0.55;
     dark = clamp(dark, 0, 0.97);
     if (dark < 0.02) return;
     const lc = this.lightCtx;
@@ -484,6 +487,7 @@ export class Renderer {
     let pr = (lantern ? 115 : room.dark === 2 ? 38 : 72) * w.stats.lightRadius;
     pr *= 1 + Math.sin(time * 3) * 0.02;
     punch(p.cx, p.cy, pr, 1);
+    if (boss?.bossActive && !boss.dead) punch(boss.cx, boss.cy, Math.max(90, Math.max(boss.w, boss.h) * 1.8), 0.9);
     const glows: { x: number; y: number; r: number; c: string; i: number }[] = [];
     if (lantern) glows.push({ x: p.cx, y: p.cy, r: pr * 0.5, c: '#ffe9a8', i: 0.18 });
     for (const e of w.entities) {

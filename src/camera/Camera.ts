@@ -25,6 +25,8 @@ export class Camera {
   lock: CamBounds | null = null;
   /** Explicit focus point (cutscenes). */
   focus: { x: number; y: number } | null = null;
+  /** A point of interest the follow camera leans toward (the active boss). */
+  attend: { x: number; y: number } | null = null;
   shakeMult = 1;
   private trauma = 0;
   private shakeTime = 0;
@@ -82,6 +84,11 @@ export class Camera {
       this.lookY = damp(this.lookY, lookDir * 64, lookDir !== 0 ? 2.5 : 5, dt);
       tx = px + this.lookX;
       ty = py - 18 + this.lookY;
+      // In boss fights, lean toward the boss so both combatants stay framed.
+      if (this.attend) {
+        tx += clamp((this.attend.x - px) * 0.4, -VIEW_W * 0.3, VIEW_W * 0.3);
+        ty += clamp((this.attend.y - py) * 0.3, -VIEW_H * 0.25, VIEW_H * 0.25);
+      }
       this.x = damp(this.x, tx, 7, dt);
       this.y = damp(this.y, ty, grounded ? 6 : 4, dt);
     }

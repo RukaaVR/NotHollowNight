@@ -284,6 +284,8 @@ export class GameWorld {
     else this.checkRoomExit();
 
     const p = this.player;
+    const ab = this.activeBoss;
+    this.camera.attend = ab?.bossActive && !ab.dead && ab.hp > 0 ? { x: ab.cx, y: ab.cy } : null;
     this.camera.update(rawDt, p.cx, p.cy, p.body.vx, p.facing, p.lookDir, p.onGround);
     this.updateMusic(rawDt);
   }
